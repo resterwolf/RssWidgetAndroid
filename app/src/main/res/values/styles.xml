@@ -1,0 +1,38 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="text_view_caption_style">
+        <item name="android:textColor">@color/color_text_primary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="text_view_pubDate_style">
+        <item name="android:textColor">@color/color_news_pub_date</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="text_view_title_style">
+        <item name="android:textAlignment">center</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/color_text_primary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:lines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="text_view_description_style">
+        <item name="android:lines">3</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/color_text_primary</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+</resources>
