@@ -11,4 +11,6 @@
     <color name="color_news_caption">#3f51b5</color>
     <color name="color_news_pub_date">#4A8AD3</color>
 
+    <color name="colorSettingsIcon">#4A8AD3</color>
+
 </resources>

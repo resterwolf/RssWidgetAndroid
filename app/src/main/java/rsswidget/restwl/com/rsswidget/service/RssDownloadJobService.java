@@ -2,26 +2,24 @@ package rsswidget.restwl.com.rsswidget.service;
 
 import android.app.job.JobParameters;
 import android.app.job.JobService;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.text.TextUtils;
 import android.util.Log;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import rsswidget.restwl.com.rsswidget.utils.PreferencesManager;
 import rsswidget.restwl.com.rsswidget.widgedprovider.RssWidgetProvider;
 import rsswidget.restwl.com.rsswidget.network.parsers.XmlParser;
 import rsswidget.restwl.com.rsswidget.database.DatabaseManager;
 import rsswidget.restwl.com.rsswidget.model.RemoteNews;
 import rsswidget.restwl.com.rsswidget.network.HttpConnector;
 
-import static rsswidget.restwl.com.rsswidget.utils.Constans.NEWS_COUNT;
-import static rsswidget.restwl.com.rsswidget.utils.Constans.PREFERENCES_KEY;
-import static rsswidget.restwl.com.rsswidget.utils.Constans.TAG;
+import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_DATASET_CHANGED;
+import static rsswidget.restwl.com.rsswidget.utils.Constants.TAG;
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class RssDownloadJobService extends JobService {
@@ -39,25 +37,24 @@ public class RssDownloadJobService extends JobService {
     public boolean onStartJob(JobParameters jobParameters) {
         Runnable runnable = () -> {
             try (DatabaseManager databaseManager = new DatabaseManager(getApplicationContext())) {
-                HttpConnector connector = new HttpConnector("https://lenta.ru/rss/news");
+                String urlString = PreferencesManager.extractUrl(getApplicationContext());
+                if (TextUtils.isEmpty(urlString)) {
+                    jobFinished(jobParameters, false);
+                    return;
+                }
+                HttpConnector connector = new HttpConnector(urlString);
                 List<RemoteNews> newsList = XmlParser.parseRssData(connector.getContentStream());
                 databaseManager.deleteAllEntryFromNewsTable();
                 databaseManager.insertListNews(newsList);
-                saveInPreferencesNewsCount(newsList.size());
-                RssWidgetProvider.updateSelfData(getApplicationContext());
+                RssWidgetProvider.sendActionToAllWidgets(getApplicationContext(), ACTION_DATASET_CHANGED);
                 Log.d(TAG, "onStartJob: News download and inserted");
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
             jobFinished(jobParameters, false);
         };
         executor.execute(runnable);
         return true;
-    }
-
-    private void saveInPreferencesNewsCount(int count) {
-        SharedPreferences preference = getApplicationContext().getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
-        preference.edit().putInt(NEWS_COUNT, count).apply();
     }
 
     @Override

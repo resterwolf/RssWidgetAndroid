@@ -9,8 +9,9 @@
     <string name="news_title_placeholder">%d. %s</string>
     <string name="hide_news">скрыть</string>
 
-
     <string name="sample_pub_date">12 августа 2018</string>
     <string name="sample_title">Таксист высадил пассажирок посреди дороги за громкий разговор</string>
     <string name="sample_description">В Таиланде таксист высадил пассажирок на половине пути, потому что устал от пробок и их громкого разговора. Когда одна из девушек спросила его, почему он так поступил, он ответил, что ему лень везти их дальше. Деньги мужчина возвращать отказался. В итоге таксиста оштрафовали на три тысячи батов (6,2 тысячи рублей).</string>
+    <string name="hint_rss_resource">rss адрес</string>
+    <string name="button_continue">продолжить</string>
 </resources>

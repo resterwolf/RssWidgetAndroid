@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import rsswidget.restwl.com.rsswidget.model.LocalNews;
+import rsswidget.restwl.com.rsswidget.model.News;
 import rsswidget.restwl.com.rsswidget.model.RemoteNews;
 
 public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
@@ -88,38 +89,99 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
         }
     }
 
-//    public List<News> getNews(News news) {
-//        List<News> newsList = new ArrayList<>();
-//        SQLiteDatabase db = getReadableDatabase();
-//
-//        String[] projection = {
-//                _ID,
-//                TITLE,
-//                DESCRIPTION,
-//                PUB_DATE,
-//                LINK
-//        };
-//
-//        // Filter results WHERE "title" = 'My Title'
-//        String selection = FeedEntry.COLUMN_NAME_TITLE + " = ?";
-//        String[] selectionArgs = {"My Title"};
-//
-//        // How you want the results sorted in the resulting Cursor
+    public LocalNews getSingleNews(News news) {
+        LocalNews localNews = null;
+        SQLiteDatabase db = getReadableDatabase();
+
+        String[] projection = {
+                _ID,
+                TITLE,
+                DESCRIPTION,
+                PUB_DATE,
+                LINK
+        };
+
+        // Filter results WHERE "title" = 'My Title'
+        String selection = TITLE + " = ?";
+        String[] selectionArgs = {news.getTitle()};
+
+        // How you want the results sorted in the resulting Cursor
 //        String sortOrder =
 //                FeedEntry.COLUMN_NAME_SUBTITLE + " DESC";
-//
-//        Cursor cursor = db.query(
-//                FeedEntry.NEWS_TABLE_NAME,   // The table to query
-//                projection,             // The array of columns to return (pass null to get all)
-//                selection,              // The columns for the WHERE clause
-//                selectionArgs,          // The values for the WHERE clause
-//                null,                   // don't group the rows
-//                null,                   // don't filter by row groups
-//                null               // The sort order
-//        );
-//
-//        return newsList;
-//    }
+
+        Cursor cursor = db.query(
+                NEWS_TABLE_NAME,   // The table to query
+                projection,             // The array of columns to return (pass null to get all)
+                selection,              // The columns for the WHERE clause
+                selectionArgs,          // The values for the WHERE clause
+                null,                   // don't group the rows
+                null,                   // don't filter by row groups
+                null               // The sort order
+        );
+
+        if (cursor.moveToFirst()) {
+            while (!cursor.isAfterLast()) {
+                int id = cursor.getInt(cursor.getColumnIndex(_ID));
+                String title = cursor.getString(cursor.getColumnIndex(TITLE));
+                String description = cursor.getString(cursor.getColumnIndex(DESCRIPTION));
+                long pubDate = cursor.getLong(cursor.getColumnIndex(PUB_DATE));
+                String link = cursor.getString(cursor.getColumnIndex(LINK));
+
+                localNews = new LocalNews(id, title, description, pubDate, link);
+                cursor.moveToNext();
+            }
+            cursor.close();
+        }
+
+        return localNews;
+    }
+
+    public LocalNews getSingleNews(int newsId) {
+        LocalNews localNews = null;
+        SQLiteDatabase db = getReadableDatabase();
+
+        String[] projection = {
+                _ID,
+                TITLE,
+                DESCRIPTION,
+                PUB_DATE,
+                LINK
+        };
+
+        // Filter results WHERE "title" = 'My Title'
+        String selection = _ID + " = ?";
+        String[] selectionArgs = {String.valueOf(newsId)};
+
+        // How you want the results sorted in the resulting Cursor
+//        String sortOrder =
+//                FeedEntry.COLUMN_NAME_SUBTITLE + " DESC";
+
+        Cursor cursor = db.query(
+                NEWS_TABLE_NAME,   // The table to query
+                projection,             // The array of columns to return (pass null to get all)
+                selection,              // The columns for the WHERE clause
+                selectionArgs,          // The values for the WHERE clause
+                null,                   // don't group the rows
+                null,                   // don't filter by row groups
+                null               // The sort order
+        );
+
+        if (cursor.moveToFirst()) {
+            while (!cursor.isAfterLast()) {
+                int id = cursor.getInt(cursor.getColumnIndex(_ID));
+                String title = cursor.getString(cursor.getColumnIndex(TITLE));
+                String description = cursor.getString(cursor.getColumnIndex(DESCRIPTION));
+                long pubDate = cursor.getLong(cursor.getColumnIndex(PUB_DATE));
+                String link = cursor.getString(cursor.getColumnIndex(LINK));
+
+                localNews = new LocalNews(id, title, description, pubDate, link);
+                cursor.moveToNext();
+            }
+            cursor.close();
+        }
+
+        return localNews;
+    }
 
     public List<LocalNews> getAllNews() {
         List<LocalNews> newsList = new ArrayList<>();

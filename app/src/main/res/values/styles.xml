@@ -35,4 +35,8 @@
         <item name="android:ellipsize">end</item>
     </style>
 
+    <style name="test" parent="Widget.AppCompat.ImageButton">
+        <item name="android:drawablePadding">2dp</item>
+    </style>
+
 </resources>

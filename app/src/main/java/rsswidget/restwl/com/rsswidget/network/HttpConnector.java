@@ -1,7 +1,5 @@
 package rsswidget.restwl.com.rsswidget.network;
 
-import android.util.Log;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,8 +8,6 @@ import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import static rsswidget.restwl.com.rsswidget.utils.Constans.TAG;
 
 public class HttpConnector {
 

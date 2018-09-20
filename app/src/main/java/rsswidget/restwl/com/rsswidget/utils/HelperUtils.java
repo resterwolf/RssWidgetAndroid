@@ -2,12 +2,14 @@ package rsswidget.restwl.com.rsswidget.utils;
 
 import android.text.Html;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import static rsswidget.restwl.com.rsswidget.utils.Constans.*;
+import static rsswidget.restwl.com.rsswidget.utils.Constants.*;
 
 public class HelperUtils {
 
@@ -22,5 +24,14 @@ public class HelperUtils {
     public static String convertDateToRuLocal(Date date) {
         DateFormat formatter = new SimpleDateFormat(RU_DATE_PATTERN, new Locale(LOCALE_RU));
         return formatter.format(date);
+    }
+
+    public static boolean urlStrIsValidFormat(String urlString) {
+        try {
+            URL url = new URL(urlString);
+            return true;
+        } catch (MalformedURLException ex) {
+            return false;
+        }
     }
 }

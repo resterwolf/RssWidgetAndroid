@@ -23,8 +23,7 @@
                 android:resource="@xml/rss_widget_info" />
         </receiver>
 
-        <activity android:name=".activities.NewsActivity" />
-        <activity android:name=".activities.WidgetConfigureActivity">
+        <activity android:name=".activities.WidgetSettingsActivity">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
@@ -43,7 +42,7 @@
             android:name=".service.RssDownloadJobService"
             android:enabled="true"
             android:exported="true"
-            android:permission="android.permission.BIND_JOB_SERVICE"></service>
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
     </application>
 
 </manifest>
