@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
         android:name=".app.WidgetApplication"
@@ -36,13 +37,24 @@
         <receiver
             android:name=".receiver.UpdateReceiver"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="com.restw.rsswidget.START_SERVICE"/>
+            </intent-filter>
+        </receiver>
 
         <service
             android:name=".service.RssDownloadJobService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
+
+        <service
+            android:name=".service.RssDownloaderJobIntentService"
+            android:enabled="true"
+            android:exported="true" />
+
     </application>
 
 </manifest>
