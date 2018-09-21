@@ -45,26 +45,21 @@
 
             <ImageButton
                 android:id="@+id/button_hide"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:adjustViewBounds="true"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:background="@android:color/transparent"
                 android:contentDescription="@string/image_default_content_description"
                 android:foreground="?android:attr/selectableItemBackground"
-                android:scaleType="center"
-                android:src="@drawable/hide_icon" />
+                android:src="@drawable/ic_hide_ripple_background" />
 
             <ImageButton
                 android:id="@+id/button_settings"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:layout_marginStart="12dp"
-                android:adjustViewBounds="true"
                 android:background="@android:color/transparent"
                 android:contentDescription="@string/image_default_content_description"
-                android:foreground="?android:attr/selectableItemBackground"
-                android:scaleType="center"
-                android:src="@drawable/settings_icon" />
+                android:src="@drawable/ic_settings_ripple_background" />
 
         </LinearLayout>
 
@@ -112,10 +107,10 @@
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:layout_marginEnd="12dp"
-                android:background="@drawable/circle_button_left_arrow"
+                android:background="@drawable/ic_circle_riple_background"
                 android:contentDescription="@string/image_default_content_description"
                 android:elevation="2dp"
-                android:src="@drawable/left_arrow"
+                android:src="@drawable/left_arrow_icon"
                 android:text="@string/previous_news" />
 
             <ImageButton
@@ -123,10 +118,10 @@
                 style="@style/test"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:background="@drawable/circle_button_left_arrow"
+                android:background="@drawable/ic_circle_riple_background"
                 android:contentDescription="@string/image_default_content_description"
                 android:elevation="2dp"
-                android:src="@drawable/right_arrow"
+                android:src="@drawable/right_arrow_icon"
                 android:text="@string/next_news" />
 
         </LinearLayout>

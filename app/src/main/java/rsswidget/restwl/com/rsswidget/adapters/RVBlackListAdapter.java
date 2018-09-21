@@ -16,7 +16,7 @@ import rsswidget.restwl.com.rsswidget.R;
 import rsswidget.restwl.com.rsswidget.model.LocalNews;
 import rsswidget.restwl.com.rsswidget.utils.HelperUtils;
 
-public class RVBlackListAdapter extends RecyclerView.Adapter<RVBlackListAdapter.HiddenNewsViewHolder> {
+public class RVBlackListAdapter extends RecyclerView.Adapter<RVBlackListAdapter.BlackListItemViewHolder> {
 
     private final List<LocalNews> localNews;
     private final Resources resources;
@@ -36,17 +36,15 @@ public class RVBlackListAdapter extends RecyclerView.Adapter<RVBlackListAdapter.
 
     @NonNull
     @Override
-    public HiddenNewsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = layoutInflater.inflate(R.layout.recycler_view_cell_blocked_news, parent, false);
-        return new HiddenNewsViewHolder(view);
+    public BlackListItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = layoutInflater.inflate(R.layout.recycler_view_cell_black_list_item, parent, false);
+        return new BlackListItemViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull HiddenNewsViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull BlackListItemViewHolder holder, int position) {
         LocalNews news = localNews.get(position);
-
         String strWithTab = resources.getString(R.string.string_with_tab);
-
         holder.tvTitle.setText(String.format(strWithTab, news.getTitle()));
         holder.tvDescription.setText(String.format(strWithTab, news.getDescription()));
         holder.tvPubDate.setText(HelperUtils.convertDateToRuLocal(news.convertDate()));
@@ -57,12 +55,12 @@ public class RVBlackListAdapter extends RecyclerView.Adapter<RVBlackListAdapter.
         return localNews.size();
     }
 
-    class HiddenNewsViewHolder extends RecyclerView.ViewHolder {
+    class BlackListItemViewHolder extends RecyclerView.ViewHolder {
         final TextView tvTitle, tvDescription, tvPubDate;
         final ImageButton button;
         final ViewGroup rootContainer;
 
-        HiddenNewsViewHolder(View itemView) {
+        BlackListItemViewHolder(View itemView) {
             super(itemView);
             tvTitle = itemView.findViewById(R.id.tv_title);
             tvDescription = itemView.findViewById(R.id.tv_description);
