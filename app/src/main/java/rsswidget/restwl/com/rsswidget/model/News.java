@@ -27,4 +27,18 @@ public abstract class News {
     }
 
     public abstract Date convertDate();
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == null) return false;
+        if (other == this) return true;
+        if (!(other instanceof News)) return false;
+        News otherMyClass = (News) other;
+        if (title.equals(otherMyClass.title) && description.equals(otherMyClass.description) &&
+                link.equals(otherMyClass.link)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

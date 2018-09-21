@@ -33,8 +33,8 @@ public class RssDownloaderJobIntentService extends JobIntentService {
             }
             HttpConnector connector = new HttpConnector(urlString);
             List<RemoteNews> newsList = XmlParser.parseRssData(connector.getContentStream());
-            databaseManager.deleteAllEntryFromNewsTable();
-            databaseManager.insertListNews(newsList);
+            databaseManager.deleteAllEntryFromNews();
+            databaseManager.insertEntriesInNews(newsList);
             RssWidgetProvider.sendActionToAllWidgets(getApplicationContext(), ACTION_DATASET_CHANGED);
             Log.d(TAG, "onStartCommand: News download and inserted");
         } catch (Exception ex) {

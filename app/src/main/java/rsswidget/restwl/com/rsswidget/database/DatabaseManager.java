@@ -68,7 +68,7 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
         onUpgrade(db, oldVersion, newVersion);
     }
 
-    public boolean insertNews(RemoteNews news) {
+    public boolean insertEntryInNews(RemoteNews news) {
         SQLiteDatabase db = getWritableDatabase();
 
         SQLiteStatement sqLiteStatement = db.compileStatement("insert into " + NEWS_TABLE_NAME +
@@ -82,108 +82,13 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
         return sqLiteStatement.executeInsert() != -1;
     }
 
-    public void insertListNews(List<RemoteNews> newsList) {
-        resetAutoincrementIdsFromNewsTable();
+    public void insertEntriesInNews(List<RemoteNews> newsList) {
         for (RemoteNews news : newsList) {
-            insertNews(news);
+            insertEntryInNews(news);
         }
     }
 
-    public LocalNews getSingleNews(News news) {
-        LocalNews localNews = null;
-        SQLiteDatabase db = getReadableDatabase();
-
-        String[] projection = {
-                _ID,
-                TITLE,
-                DESCRIPTION,
-                PUB_DATE,
-                LINK
-        };
-
-        // Filter results WHERE "title" = 'My Title'
-        String selection = TITLE + " = ?";
-        String[] selectionArgs = {news.getTitle()};
-
-        // How you want the results sorted in the resulting Cursor
-//        String sortOrder =
-//                FeedEntry.COLUMN_NAME_SUBTITLE + " DESC";
-
-        Cursor cursor = db.query(
-                NEWS_TABLE_NAME,   // The table to query
-                projection,             // The array of columns to return (pass null to get all)
-                selection,              // The columns for the WHERE clause
-                selectionArgs,          // The values for the WHERE clause
-                null,                   // don't group the rows
-                null,                   // don't filter by row groups
-                null               // The sort order
-        );
-
-        if (cursor.moveToFirst()) {
-            while (!cursor.isAfterLast()) {
-                int id = cursor.getInt(cursor.getColumnIndex(_ID));
-                String title = cursor.getString(cursor.getColumnIndex(TITLE));
-                String description = cursor.getString(cursor.getColumnIndex(DESCRIPTION));
-                long pubDate = cursor.getLong(cursor.getColumnIndex(PUB_DATE));
-                String link = cursor.getString(cursor.getColumnIndex(LINK));
-
-                localNews = new LocalNews(id, title, description, pubDate, link);
-                cursor.moveToNext();
-            }
-            cursor.close();
-        }
-
-        return localNews;
-    }
-
-    public LocalNews getSingleNews(int newsId) {
-        LocalNews localNews = null;
-        SQLiteDatabase db = getReadableDatabase();
-
-        String[] projection = {
-                _ID,
-                TITLE,
-                DESCRIPTION,
-                PUB_DATE,
-                LINK
-        };
-
-        // Filter results WHERE "title" = 'My Title'
-        String selection = _ID + " = ?";
-        String[] selectionArgs = {String.valueOf(newsId)};
-
-        // How you want the results sorted in the resulting Cursor
-//        String sortOrder =
-//                FeedEntry.COLUMN_NAME_SUBTITLE + " DESC";
-
-        Cursor cursor = db.query(
-                NEWS_TABLE_NAME,   // The table to query
-                projection,             // The array of columns to return (pass null to get all)
-                selection,              // The columns for the WHERE clause
-                selectionArgs,          // The values for the WHERE clause
-                null,                   // don't group the rows
-                null,                   // don't filter by row groups
-                null               // The sort order
-        );
-
-        if (cursor.moveToFirst()) {
-            while (!cursor.isAfterLast()) {
-                int id = cursor.getInt(cursor.getColumnIndex(_ID));
-                String title = cursor.getString(cursor.getColumnIndex(TITLE));
-                String description = cursor.getString(cursor.getColumnIndex(DESCRIPTION));
-                long pubDate = cursor.getLong(cursor.getColumnIndex(PUB_DATE));
-                String link = cursor.getString(cursor.getColumnIndex(LINK));
-
-                localNews = new LocalNews(id, title, description, pubDate, link);
-                cursor.moveToNext();
-            }
-            cursor.close();
-        }
-
-        return localNews;
-    }
-
-    public List<LocalNews> getAllNews() {
+    public List<LocalNews> extractAllEntryFromNews() {
         List<LocalNews> newsList = new ArrayList<>();
         SQLiteDatabase db = getReadableDatabase();
 
@@ -204,24 +109,55 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
         return newsList;
     }
 
-    public void resetAutoincrementIdsFromNewsTable() {
-        SQLiteDatabase db = getReadableDatabase();
-        db.execSQL("DELETE FROM SQLITE_SEQUENCE WHERE NAME = '" + NEWS_TABLE_NAME + "'");
-    }
-
-    public void resetAutoincrementIdsFromBlackListTable() {
-        SQLiteDatabase db = getReadableDatabase();
-        db.execSQL("DELETE FROM SQLITE_SEQUENCE WHERE NAME = '" + BLACK_LIST_TABLE_NAME + "'");
-    }
-
-    public void deleteAllEntryFromNewsTable() {
+    public void deleteAllEntryFromNews() {
         SQLiteDatabase db = getWritableDatabase();
         db.execSQL("DELETE FROM " + NEWS_TABLE_NAME);
     }
 
-    public void deleteAllEntryFromBlackListTable() {
+    public List<LocalNews> extractAllEntryFromBlackList() {
+        List<LocalNews> newsList = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+
+        Cursor cursor = db.rawQuery("select * from " + BLACK_LIST_TABLE_NAME, null);
+        if (cursor.moveToFirst()) {
+            while (!cursor.isAfterLast()) {
+                int id = cursor.getInt(cursor.getColumnIndex(_ID));
+                String title = cursor.getString(cursor.getColumnIndex(TITLE));
+                String description = cursor.getString(cursor.getColumnIndex(DESCRIPTION));
+                long pubDate = cursor.getLong(cursor.getColumnIndex(PUB_DATE));
+                String link = cursor.getString(cursor.getColumnIndex(LINK));
+
+                newsList.add(new LocalNews(id, title, description, pubDate, link));
+                cursor.moveToNext();
+            }
+            cursor.close();
+        }
+        return newsList;
+    }
+
+    public boolean insertEntryInBlackList(News news) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        SQLiteStatement sqLiteStatement = db.compileStatement("insert into " + BLACK_LIST_TABLE_NAME +
+                " (" + TITLE + "," + DESCRIPTION + "," + PUB_DATE + "," + LINK + ") " +
+                "values (?,?,?,?);");
+        sqLiteStatement.bindString(1, news.getTitle());
+        sqLiteStatement.bindString(2, news.getDescription());
+        if (news.convertDate() != null)
+            sqLiteStatement.bindLong(3, news.convertDate().getTime());
+        sqLiteStatement.bindString(4, news.getLink());
+        return sqLiteStatement.executeInsert() != -1;
+    }
+
+    public boolean removeEntryFromBlackList(LocalNews news) {
+        SQLiteDatabase db = getWritableDatabase();
+        String selection = _ID + " = ?";
+        String[] selectionArgs = {String.valueOf(news.getId())};
+        return db.delete(BLACK_LIST_TABLE_NAME, selection, selectionArgs) > 0;
+    }
+
+    public void clearAllEntryFromBlackList() {
         SQLiteDatabase db = getWritableDatabase();
         db.execSQL("DELETE FROM " + BLACK_LIST_TABLE_NAME);
     }
-
 }

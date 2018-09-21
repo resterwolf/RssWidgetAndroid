@@ -7,35 +7,74 @@
     android:padding="8dp"
     tools:context=".activities.WidgetSettingsActivity">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/textInputLayout"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:weightSum="8">
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <android.support.design.widget.TextInputLayout
-            android:layout_width="0dp"
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/ev_url"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_weight="6">
+            android:hint="@string/hint_rss_resource"
+            android:inputType="textUri" />
+    </android.support.design.widget.TextInputLayout>
 
-            <android.support.design.widget.TextInputEditText
-                android:id="@+id/ev_url"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/hint_rss_resource"
-                android:inputType="textUri" />
-        </android.support.design.widget.TextInputLayout>
+    <Button
+        android:id="@+id/button_continue"
+        style="@style/ButtonStyle1"
+        android:layout_width="180dp"
+        android:layout_marginEnd="8dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_weight="2"
+        android:text="@string/button_continue"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textInputLayout" />
 
-        <Button
-            android:id="@+id/button_continue"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:text="@string/button_continue" />
+    <TextView
+        android:id="@+id/tv_recycler_caption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="@string/list_hide_news"
+        android:textColor="@color/color_text_primary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button_continue" />
 
-    </LinearLayout>
+    <Button
+        android:id="@+id/button_clear_black_list"
+        style="@style/ButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="12dp"
+        android:text="@string/clear_black_list"
+        app:layout_constraintBottom_toBottomOf="@id/tv_recycler_caption"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tv_recycler_caption" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view_blocked_news_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:scrollbars="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_recycler_caption"
+        tools:layoutManager="android.support.v7.widget.LinearLayoutManager"
+        tools:listitem="@layout/recycler_view_cell_blocked_news"
+        tools:spanCount="2" />
 
     <ProgressBar
         android:id="@+id/progressBar"
