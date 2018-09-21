@@ -3,6 +3,7 @@ package rsswidget.restwl.com.rsswidget.activities;
 import android.appwidget.AppWidgetManager;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -34,7 +35,7 @@ public class WidgetSettingsActivity extends AppCompatActivity {
     private int mAppWidgetId;
 
     // UI
-    private EditText editTextUrl;
+    private TextInputEditText editTextUrl;
     private Button buttonContinue;
     private ProgressBar progressBar;
 
@@ -56,6 +57,12 @@ public class WidgetSettingsActivity extends AppCompatActivity {
         initViews();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        executor.shutdown();
+    }
+
     private void initViews() {
         editTextUrl = findViewById(R.id.ev_url);
         buttonContinue = findViewById(R.id.button_continue);
@@ -74,10 +81,21 @@ public class WidgetSettingsActivity extends AppCompatActivity {
     public void buttonContinueClicked(View button) {
         String urlString = editTextUrl.getText().toString().trim();
         if (!HelperUtils.urlStrIsValidFormat(urlString)) {
+            editTextUrl.setError("Invalid url");
             Log.d(TAG, "WidgetSettingsActivity. Invalid url format");
             return;
         }
         downloadAndSaveData(urlString);
+    }
+
+    public void enableViewsState() {
+        editTextUrl.setEnabled(true);
+        buttonContinue.setEnabled(true);
+    }
+
+    public void disableViewsState() {
+        editTextUrl.setEnabled(false);
+        buttonContinue.setEnabled(false);
     }
 
     private void handleIndent() {
@@ -124,10 +142,14 @@ public class WidgetSettingsActivity extends AppCompatActivity {
             } catch (Exception ex) {
                 ex.printStackTrace();
             } finally {
-                runOnUiThread(this::hideProgress);
-                executor.shutdown();
+                runOnUiThread(() -> {
+                    hideProgress();
+                    enableViewsState();
+                });
+//                executor.shutdown();
             }
         };
+        disableViewsState();
         executor.execute(runnable);
         showProgress();
     }

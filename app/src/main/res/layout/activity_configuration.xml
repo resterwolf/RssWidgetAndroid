@@ -14,14 +14,19 @@
         android:orientation="horizontal"
         android:weightSum="8">
 
-        <EditText
-            android:id="@+id/ev_url"
+        <android.support.design.widget.TextInputLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
-            android:layout_weight="6"
-            android:hint="@string/hint_rss_resource"
-            android:inputType="textUri" />
+            android:layout_weight="6">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/ev_url"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/hint_rss_resource"
+                android:inputType="textUri" />
+        </android.support.design.widget.TextInputLayout>
 
         <Button
             android:id="@+id/button_continue"

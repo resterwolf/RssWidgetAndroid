@@ -1,6 +1,5 @@
 package rsswidget.restwl.com.rsswidget.service;
 
-import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -29,7 +28,7 @@ public class RssDownloaderJobIntentService extends JobIntentService {
         try (DatabaseManager databaseManager = new DatabaseManager(getApplicationContext())) {
             String urlString = PreferencesManager.extractUrl(getApplicationContext());
             if (TextUtils.isEmpty(urlString)) {
-//                stopSelf();
+                stopSelf();
                 return;
             }
             HttpConnector connector = new HttpConnector(urlString);
@@ -41,7 +40,7 @@ public class RssDownloaderJobIntentService extends JobIntentService {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-//        stopSelf();
+        stopSelf();
     }
 
     @Override

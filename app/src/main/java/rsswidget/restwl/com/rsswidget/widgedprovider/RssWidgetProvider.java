@@ -123,22 +123,6 @@ public class RssWidgetProvider extends AppWidgetProvider {
         return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private static void startJobSchedulerTask(Context context) {
-        JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        ComponentName componentName = new ComponentName(context, RssDownloadJobService.class);
-        JobInfo jobInfo = new JobInfo.Builder(RssDownloadJobService.JOB_ID, componentName)
-                .setPeriodic(TimeUnit.SECONDS.toMillis(60))
-                .build();
-        jobScheduler.schedule(jobInfo);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private static void stopJobSchedulerTask(Context context) {
-        JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        jobScheduler.cancel(RssDownloadJobService.JOB_ID);
-    }
-
     public static void handleUpdateWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.rss_widget_layout);
         remoteViews.setOnClickPendingIntent(R.id.button_settings,
@@ -200,19 +184,11 @@ public class RssWidgetProvider extends AppWidgetProvider {
     }
 
     public static void schedulePeriodicallyTasks(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            startJobSchedulerTask(context);
-        } else {
-            startAlarmManagerTask(context);
-        }
+        startAlarmManagerTask(context);
     }
 
     private void stopSchedulePeriodicallyTasks(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            stopJobSchedulerTask(context);
-        } else {
-            stopAlarmManagerTask(context);
-        }
+        stopAlarmManagerTask(context);
     }
 
     private static int calculateNewIndex(int currentNewsIndex, String intentAction) {
@@ -227,6 +203,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
     private static void startAlarmManagerTask(Context context) {
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, UpdateReceiver.class);
+        intent.setAction(ACTION_START_SERVICE);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent, 0);
         long currentTime = Calendar.getInstance().getTimeInMillis();
         am.setRepeating(AlarmManager.RTC_WAKEUP, currentTime + 5 * 1000, 60000, pi);
