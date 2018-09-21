@@ -36,7 +36,7 @@ import rsswidget.restwl.com.rsswidget.widgedprovider.RssWidgetProvider;
 import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_OPEN_SETTINGS;
 import static rsswidget.restwl.com.rsswidget.utils.Constants.TAG;
 
-public class WidgetSettingsActivity extends AppCompatActivity implements RVBlackListAdapter.CellClickListener {
+public class SettingsActivity extends AppCompatActivity implements RVBlackListAdapter.CellClickListener {
 
     private ExecutorService executor;
     private int mAppWidgetId;
@@ -52,7 +52,7 @@ public class WidgetSettingsActivity extends AppCompatActivity implements RVBlack
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_configuration);
+        setContentView(R.layout.activity_settings);
         initActionBar();
         initViews();
 
@@ -165,7 +165,7 @@ public class WidgetSettingsActivity extends AppCompatActivity implements RVBlack
         String urlString = editTextUrl.getText().toString().trim();
         if (!HelperUtils.urlStrIsValidFormat(urlString)) {
             editTextUrl.setError("Invalid url");
-            Log.d(TAG, "WidgetSettingsActivity. Invalid url format");
+            Log.d(TAG, "SettingsActivity. Invalid url format");
             return;
         }
         downloadAndSaveData(urlString);
@@ -215,13 +215,13 @@ public class WidgetSettingsActivity extends AppCompatActivity implements RVBlack
                 HttpConnector connector = new HttpConnector(urlString);
                 List<RemoteNews> newsList = XmlParser.parseRssData(connector.getContentStream());
                 saveDateIntoDatabase(newsList);
-                PreferencesManager.putUrl(WidgetSettingsActivity.this, urlString);
+                PreferencesManager.putUrl(SettingsActivity.this, urlString);
                 if (flag == ConfigurationFlag.Initial) {
                     notifyWidgetAfterInitialConfigAndCloseCurrent();
                 } else {
                     notifyWidgetAfterCustomConfigAndCloseCurrent();
                 }
-                Log.d(TAG, "WidgetSettingsActivity: News downloaded and saved");
+                Log.d(TAG, "SettingsActivity: News downloaded and saved");
             } catch (Exception ex) {
                 ex.printStackTrace();
             } finally {

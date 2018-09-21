@@ -26,7 +26,7 @@
         </receiver>
 
         <activity
-            android:name=".activities.WidgetSettingsActivity"
+            android:name=".activities.SettingsActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />

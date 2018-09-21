@@ -7,7 +7,7 @@
     <string name="next_news">Дальше</string>
 
     <string name="image_default_content_description">image</string>
-    <string name="news_title_placeholder">%d. %s</string>
+    <string name="news_title_placeholder">\t%d. %s</string>
     <string name="hide_news">скрыть</string>
 
     <string name="sample_pub_date">12 августа 2018</string>
