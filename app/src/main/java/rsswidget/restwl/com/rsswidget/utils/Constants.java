@@ -13,4 +13,6 @@ public class Constants {
     public static final String ACTION_START_SERVICE = "com.restw.rsswidget.START_SERVICE";
     public static final String ACTION_BOOT_COMPLETED = "android.intent.action.BOOT_COMPLETED";
 
+    public static final String NEWS_INDEX = "NEWS_INDEX";
+
 }

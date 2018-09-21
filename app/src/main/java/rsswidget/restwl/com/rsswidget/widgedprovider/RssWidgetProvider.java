@@ -2,16 +2,12 @@ package rsswidget.restwl.com.rsswidget.widgedprovider;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -19,19 +15,23 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import rsswidget.restwl.com.rsswidget.R;
 import rsswidget.restwl.com.rsswidget.activities.WidgetSettingsActivity;
 import rsswidget.restwl.com.rsswidget.database.DatabaseManager;
 import rsswidget.restwl.com.rsswidget.model.LocalNews;
 import rsswidget.restwl.com.rsswidget.receiver.UpdateReceiver;
-import rsswidget.restwl.com.rsswidget.service.RssDownloadJobService;
 import rsswidget.restwl.com.rsswidget.utils.Constants;
 import rsswidget.restwl.com.rsswidget.utils.HelperUtils;
 import rsswidget.restwl.com.rsswidget.utils.PreferencesManager;
 
-import static rsswidget.restwl.com.rsswidget.utils.Constants.*;
+import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_DATASET_CHANGED;
+import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_NEXT_NEWS_BUTTON;
+import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_OPEN_SETTINGS;
+import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_PREVIOUS_NEWS_BUTTON;
+import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_START_SERVICE;
+import static rsswidget.restwl.com.rsswidget.utils.Constants.NEWS_INDEX;
+import static rsswidget.restwl.com.rsswidget.utils.Constants.TAG;
 
 public class RssWidgetProvider extends AppWidgetProvider {
 
@@ -123,27 +123,36 @@ public class RssWidgetProvider extends AppWidgetProvider {
         return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
+    private static int generatePreviousIndex(int currentNewsIndex) {
+        return currentNewsIndex == 0 ? newsList.size() - 1 : --currentNewsIndex;
+    }
+
+    private static int generateNextIndex(int currentNewsIndex) {
+        return currentNewsIndex == newsList.size() - 1 ? 0 : ++currentNewsIndex;
+    }
+
     public static void handleUpdateWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.rss_widget_layout);
         remoteViews.setOnClickPendingIntent(R.id.button_settings,
                 getPendingIntentSetting(context, appWidgetId));
+
+        if (newsDataIsEmpty()) return;
+        int currentNewsIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
+        if (!indexIsCorrect(currentNewsIndex)) {
+            currentNewsIndex = 0;
+        }
+
         remoteViews.setOnClickPendingIntent(R.id.button_previous,
                 getPendingIntentCustomAction(context, appWidgetId, ACTION_PREVIOUS_NEWS_BUTTON));
         remoteViews.setOnClickPendingIntent(R.id.button_next,
                 getPendingIntentCustomAction(context, appWidgetId, ACTION_NEXT_NEWS_BUTTON));
 
-        if (newsDataIsEmpty()) return;
-        int currentNewsIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
-        if (indexIsCorrect(currentNewsIndex)) {
-            LocalNews news = newsList.get(currentNewsIndex);
-            String newsTitle = String.format(context.getString(R.string.news_title_placeholder), news.getId(), news.getTitle());
-            remoteViews.setTextViewText(R.id.tv_news_title, newsTitle);
-            remoteViews.setTextViewText(R.id.tv_news_description, news.getDescription());
-            remoteViews.setTextViewText(R.id.tv_news_pub_date, HelperUtils.convertDateToRuLocal(news.convertDate()));
-            remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, getPendingIntentActionView(context, news.getLink()));
-        } else {
-            PreferencesManager.resetNewsIndex(context, appWidgetId);
-        }
+        LocalNews news = newsList.get(currentNewsIndex);
+        String newsTitle = String.format(context.getString(R.string.news_title_placeholder), news.getId(), news.getTitle());
+        remoteViews.setTextViewText(R.id.tv_news_title, newsTitle);
+        remoteViews.setTextViewText(R.id.tv_news_description, news.getDescription());
+        remoteViews.setTextViewText(R.id.tv_news_pub_date, HelperUtils.convertDateToRuLocal(news.convertDate()));
+        remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, getPendingIntentActionView(context, news.getLink()));
         appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
     }
 
@@ -171,10 +180,9 @@ public class RssWidgetProvider extends AppWidgetProvider {
             if (newsDataIsNotEmpty()) {
                 int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
                 if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) return;
-
-                int currentNewsIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
-                int newIndex = calculateNewIndex(currentNewsIndex, intentAction);
-                PreferencesManager.putNewsIndex(context, appWidgetId, newIndex);
+                int shownNewsIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
+                int displayedNewsIndex = calculateNewIndex(shownNewsIndex, intentAction);
+                PreferencesManager.putNewsIndex(context, appWidgetId, displayedNewsIndex);
                 handleUpdateWidget(context, AppWidgetManager.getInstance(context), appWidgetId);
             } else {
                 extractAndSetDataFromDatabase(context);
