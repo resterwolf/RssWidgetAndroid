@@ -46,7 +46,6 @@ public class RssDownloaderJobIntentService extends JobIntentService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "RssDownloaderJobIntentService onDestroy: ");
     }
 
     public static void startService(Context context) {

@@ -222,6 +222,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
                 int displayedIndex = calculateNextIndexAfterRemovingNews(shownIndex);
                 News news = newsList.remove(displayedIndex);
                 addNewsInBlockedList(context, news);
+                PreferencesManager.putNewsIndex(context, appWidgetId, displayedIndex);
                 handleUpdateWidget(context, AppWidgetManager.getInstance(context), appWidgetId);
             } else {
                 handleUpdateWidget(context, AppWidgetManager.getInstance(context), appWidgetId);

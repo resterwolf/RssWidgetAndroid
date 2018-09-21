@@ -11,6 +11,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -33,6 +34,7 @@ import rsswidget.restwl.com.rsswidget.utils.HelperUtils;
 import rsswidget.restwl.com.rsswidget.utils.PreferencesManager;
 import rsswidget.restwl.com.rsswidget.widgedprovider.RssWidgetProvider;
 
+import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_DATASET_CHANGED;
 import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_OPEN_SETTINGS;
 import static rsswidget.restwl.com.rsswidget.utils.Constants.TAG;
 
@@ -59,7 +61,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         executor = Executors.newSingleThreadExecutor();
         handleIndent();
         initRecyclerView();
-        extractFromDatabaseBlockedNews();
+        updateAsyncCurrentDataFromBlackListDb();
     }
 
     private void initActionBar() {
@@ -74,6 +76,17 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
     protected void onDestroy() {
         super.onDestroy();
         executor.shutdown();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -93,6 +106,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
                 runOnUiThread(() -> {
                     this.newsList.remove(localNews);
                     recyclerView.getAdapter().notifyDataSetChanged();
+                    RssWidgetProvider.sendActionToAllWidgets(this, ACTION_DATASET_CHANGED);
                 });
             }
         };
@@ -104,7 +118,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         startActivity(intent);
     }
 
-    private void extractFromDatabaseBlockedNews() {
+    private void updateAsyncCurrentDataFromBlackListDb() {
         Runnable runnable = () -> {
             try (DatabaseManager databaseManager = new DatabaseManager(this)) {
                 List<LocalNews> localNewsList = databaseManager.extractAllEntryFromBlackList();
@@ -152,9 +166,10 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         Runnable runnable = () -> {
             try (DatabaseManager databaseManager = new DatabaseManager(this)) {
                 databaseManager.clearAllEntryFromBlackList();
-                newsList.clear();
                 runOnUiThread(() -> {
+                    newsList.clear();
                     recyclerView.getAdapter().notifyDataSetChanged();
+                    RssWidgetProvider.sendActionToAllWidgets(this, ACTION_DATASET_CHANGED);
                 });
             }
         };
@@ -168,7 +183,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
             Log.d(TAG, "SettingsActivity. Invalid url format");
             return;
         }
-        downloadAndSaveData(urlString);
+        downloadDataFromNetAndStoreInDb(urlString);
     }
 
     public void enableViewsState() {
@@ -191,16 +206,16 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
 
         switch (intentAction) {
             case AppWidgetManager.ACTION_APPWIDGET_CONFIGURE:
-                extractWidgetId(intent.getExtras());
+                setWidgetId(intent.getExtras());
                 break;
             case ACTION_OPEN_SETTINGS:
-                extractWidgetId(intent.getExtras());
+                setWidgetId(intent.getExtras());
                 flag = ConfigurationFlag.Custom;
                 break;
         }
     }
 
-    private void extractWidgetId(Bundle extras) {
+    private void setWidgetId(Bundle extras) {
         if (extras != null) {
             mAppWidgetId = extras.getInt(
                     AppWidgetManager.EXTRA_APPWIDGET_ID,
@@ -208,7 +223,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         }
     }
 
-    private void downloadAndSaveData(String urlString) {
+    private void downloadDataFromNetAndStoreInDb(String urlString) {
         Runnable runnable = () -> {
             if (isFinishing()) return;
             try {
