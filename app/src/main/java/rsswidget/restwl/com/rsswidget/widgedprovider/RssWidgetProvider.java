@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.RemoteViews;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -27,13 +28,7 @@ import rsswidget.restwl.com.rsswidget.utils.Constants;
 import rsswidget.restwl.com.rsswidget.utils.HelperUtils;
 import rsswidget.restwl.com.rsswidget.utils.PreferencesManager;
 
-import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_DATASET_CHANGED;
-import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_HIDE_NEWS;
-import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_SHOW_NEXT_NEWS;
-import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_OPEN_SETTINGS;
-import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_SHOW_PREVIOUS_NEWS;
-import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_START_SERVICE;
-import static rsswidget.restwl.com.rsswidget.utils.Constants.TAG;
+import static rsswidget.restwl.com.rsswidget.utils.Constants.*;
 
 public class RssWidgetProvider extends AppWidgetProvider {
 
@@ -41,7 +36,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        Log.d("MyLog", "onUpdate: ");
+        Log.d(TAG, "onUpdate: ");
         for (int id : appWidgetIds) {
             handleUpdateWidget(context, appWidgetManager, id);
         }
@@ -74,6 +69,83 @@ public class RssWidgetProvider extends AppWidgetProvider {
         super.onDeleted(context, appWidgetIds);
         for (int id : appWidgetIds) {
             PreferencesManager.resetNewsIndex(context, id);
+        }
+    }
+
+    public static void handleUpdateWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+        RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.rss_widget_layout);
+        remoteViews.setOnClickPendingIntent(R.id.button_settings,
+                getPendingIntentSetting(context, appWidgetId));
+        remoteViews.setOnClickPendingIntent(R.id.button_hide,
+                getPendingIntentCustomAction(context, appWidgetId, ACTION_HIDE_NEWS));
+        remoteViews.setOnClickPendingIntent(R.id.button_previous,
+                getPendingIntentCustomAction(context, appWidgetId, ACTION_SHOW_PREVIOUS + appWidgetId));
+        remoteViews.setOnClickPendingIntent(R.id.button_next,
+                getPendingIntentCustomAction(context, appWidgetId, ACTION_SHOW_NEXT + appWidgetId));
+        if (newsDataIsEmpty()) {
+            remoteViews.setTextViewText(R.id.tv_news_title, context.getString(R.string.news_list_empty));
+            hideViews(remoteViews);
+            remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, null);
+        } else {
+            showViews(remoteViews);
+            int currentNewsIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
+            if (!indexIsCorrect(currentNewsIndex)) {
+                currentNewsIndex = 0;
+            }
+
+            LocalNews news = newsList.get(currentNewsIndex);
+            String newsTitle = String.format(context.getString(R.string.news_title_placeholder), currentNewsIndex + 1, news.getTitle());
+            remoteViews.setTextViewText(R.id.tv_news_title, newsTitle);
+            remoteViews.setTextViewText(R.id.tv_news_description, news.getDescription());
+            remoteViews.setTextViewText(R.id.tv_news_pub_date, HelperUtils.convertDateToRuLocal(news.convertDate()));
+            remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, getPendingIntentActionView(context, news.getLink()));
+        }
+        appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
+    }
+
+    private void handleReceiveWidget(Context context, Intent intent) {
+        final String intentAction = intent.getAction();
+        if (intentAction == null) throw new IllegalArgumentException();
+
+        int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+
+        if (intentAction.equals(Constants.ACTION_INITIAL_CONFIG)) {
+            extractAndSetDataFromDatabase(context);
+            return;
+        }
+
+        if (intentAction.equals(Constants.ACTION_CUSTOM_CONFIG)) {
+            extractAndSetDataFromDatabase(context);
+            return;
+        }
+
+        if (intentAction.equals(ACTION_DATASET_CHANGED)) {
+            extractAndSetDataFromDatabase(context);
+            return;
+        }
+
+        if (intentAction.equals(ACTION_SHOW_PREVIOUS + appWidgetId) || intentAction.equals(ACTION_SHOW_NEXT + appWidgetId)) {
+            if (newsDataIsNotEmpty()) {
+                if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) return;
+                int shownIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
+                int displayedIndex = calculateNewIndexForWidget(appWidgetId, intentAction, shownIndex);
+                PreferencesManager.putNewsIndex(context, appWidgetId, displayedIndex);
+                handleUpdateWidget(context, AppWidgetManager.getInstance(context), appWidgetId);
+            } else {
+                extractAndSetDataFromDatabase(context);
+            }
+        }
+
+        if (intentAction.equals(ACTION_HIDE_NEWS)) {
+            if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) return;
+            if (newsDataIsNotEmpty()) {
+                int shownIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
+                int displayedIndex = calculateNextIndexAfterRemovingNews(shownIndex);
+                News news = newsList.remove(displayedIndex);
+                addNewsInBlockedList(context, news);
+                PreferencesManager.putNewsIndex(context, appWidgetId, displayedIndex);
+            }
+            sendActionToAllWidgets(context, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
         }
     }
 
@@ -132,38 +204,6 @@ public class RssWidgetProvider extends AppWidgetProvider {
         return removingNewsIndex >= newsList.size() - 1 ? 0 : removingNewsIndex;
     }
 
-    public static void handleUpdateWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
-        RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.rss_widget_layout);
-        remoteViews.setOnClickPendingIntent(R.id.button_settings,
-                getPendingIntentSetting(context, appWidgetId));
-        remoteViews.setOnClickPendingIntent(R.id.button_hide,
-                getPendingIntentCustomAction(context, appWidgetId, ACTION_HIDE_NEWS));
-        remoteViews.setOnClickPendingIntent(R.id.button_previous,
-                getPendingIntentCustomAction(context, appWidgetId, ACTION_SHOW_PREVIOUS_NEWS));
-        remoteViews.setOnClickPendingIntent(R.id.button_next,
-                getPendingIntentCustomAction(context, appWidgetId, ACTION_SHOW_NEXT_NEWS));
-
-        if (newsDataIsEmpty()) {
-            remoteViews.setTextViewText(R.id.tv_news_title, context.getString(R.string.news_list_empty));
-            hideViews(remoteViews);
-            remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, null);
-        } else {
-            showViews(remoteViews);
-            int currentNewsIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
-            if (!indexIsCorrect(currentNewsIndex)) {
-                currentNewsIndex = 0;
-            }
-
-            LocalNews news = newsList.get(currentNewsIndex);
-            String newsTitle = String.format(context.getString(R.string.news_title_placeholder), currentNewsIndex + 1, news.getTitle());
-            remoteViews.setTextViewText(R.id.tv_news_title, newsTitle);
-            remoteViews.setTextViewText(R.id.tv_news_description, news.getDescription());
-            remoteViews.setTextViewText(R.id.tv_news_pub_date, HelperUtils.convertDateToRuLocal(news.convertDate()));
-            remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, getPendingIntentActionView(context, news.getLink()));
-        }
-        appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
-    }
-
     public static void showViews(RemoteViews remoteViews) {
         remoteViews.setViewVisibility(R.id.button_hide, View.VISIBLE);
         remoteViews.setViewVisibility(R.id.button_next, View.VISIBLE);
@@ -179,55 +219,6 @@ public class RssWidgetProvider extends AppWidgetProvider {
         remoteViews.setViewVisibility(R.id.button_previous, View.INVISIBLE);
         remoteViews.setViewVisibility(R.id.tv_news_description, View.INVISIBLE);
         remoteViews.setViewVisibility(R.id.tv_news_pub_date, View.INVISIBLE);
-    }
-
-    private void handleReceiveWidget(Context context, Intent intent) {
-        final String intentAction = intent.getAction();
-        if (intentAction == null) throw new IllegalArgumentException();
-        Log.d(TAG, "intentAction: " + intentAction);
-
-        if (intentAction.equals(Constants.ACTION_INITIAL_CONFIG)) {
-            extractAndSetDataFromDatabase(context);
-            return;
-        }
-
-        if (intentAction.equals(Constants.ACTION_CUSTOM_CONFIG)) {
-            extractAndSetDataFromDatabase(context);
-            return;
-        }
-
-        if (intentAction.equals(ACTION_DATASET_CHANGED)) {
-            extractAndSetDataFromDatabase(context);
-            return;
-        }
-
-        if (intentAction.equals(ACTION_SHOW_PREVIOUS_NEWS) || intentAction.equals(ACTION_SHOW_NEXT_NEWS)) {
-            if (newsDataIsNotEmpty()) {
-                int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
-                if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) return;
-                int shownIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
-                int displayedIndex = calculateNewIndex(shownIndex, intentAction);
-                PreferencesManager.putNewsIndex(context, appWidgetId, displayedIndex);
-                handleUpdateWidget(context, AppWidgetManager.getInstance(context), appWidgetId);
-            } else {
-                extractAndSetDataFromDatabase(context);
-            }
-        }
-
-        if (intentAction.equals(ACTION_HIDE_NEWS)) {
-            int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
-            if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) return;
-            if (newsDataIsNotEmpty()) {
-                int shownIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
-                int displayedIndex = calculateNextIndexAfterRemovingNews(shownIndex);
-                News news = newsList.remove(displayedIndex);
-                addNewsInBlockedList(context, news);
-                PreferencesManager.putNewsIndex(context, appWidgetId, displayedIndex);
-                handleUpdateWidget(context, AppWidgetManager.getInstance(context), appWidgetId);
-            } else {
-                handleUpdateWidget(context, AppWidgetManager.getInstance(context), appWidgetId);
-            }
-        }
     }
 
     public static void addNewsInBlockedList(Context context, News news) {
@@ -247,11 +238,11 @@ public class RssWidgetProvider extends AppWidgetProvider {
         stopAlarmManagerTask(context);
     }
 
-    private static int calculateNewIndex(int currentNewsIndex, String intentAction) {
-        if (intentAction.equals(ACTION_SHOW_PREVIOUS_NEWS)) {
-            return currentNewsIndex == 0 ? newsList.size() - 1 : --currentNewsIndex;
-        } else if (intentAction.equals(ACTION_SHOW_NEXT_NEWS)) {
-            return currentNewsIndex == newsList.size() - 1 ? 0 : ++currentNewsIndex;
+    private static int calculateNewIndexForWidget(int appWidgetId, String intentAction, int currentIndex) {
+        if (intentAction.equals(ACTION_SHOW_PREVIOUS + appWidgetId)) {
+            return currentIndex == 0 ? newsList.size() - 1 : --currentIndex;
+        } else if (intentAction.equals(ACTION_SHOW_NEXT + appWidgetId)) {
+            return currentIndex == newsList.size() - 1 ? 0 : ++currentIndex;
         }
         return 0;
     }
