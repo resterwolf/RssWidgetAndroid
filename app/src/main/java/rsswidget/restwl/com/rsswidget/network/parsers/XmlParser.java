@@ -26,11 +26,9 @@ public class XmlParser {
 
     public static List<News> parseRssData(@Nullable InputStream inputData) throws XmlPullParserException, IOException, ParseException {
         if (inputData == null) return null;
-
-        List<News> newsList = null;
+        List<News> newsList = new ArrayList<>();
         XmlPullParser parser = Xml.newPullParser();
 
-        // auto-detect the encoding from the stream
         parser.setInput(inputData, Xml.Encoding.UTF_8.name());
         int eventType = parser.getEventType();
         boolean done = false;
@@ -42,7 +40,6 @@ public class XmlParser {
             String name = null;
             switch (eventType) {
                 case XmlPullParser.START_DOCUMENT:
-                    newsList = new ArrayList<>();
                     break;
                 case XmlPullParser.START_TAG:
                     name = parser.getName();

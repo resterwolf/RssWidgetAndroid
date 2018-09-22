@@ -13,15 +13,20 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:errorEnabled="true"
+        android:theme="@style/TextInputLayoutUrlTheme"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <android.support.design.widget.TextInputEditText
+        <android.support.v7.widget.AppCompatEditText
             android:id="@+id/ev_url"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/settings_activity_hint_rss_resource"
-            android:inputType="textUri" />
+            android:imeOptions="actionDone"
+            android:inputType="textUri"
+            android:singleLine="true" />
+
     </android.support.design.widget.TextInputLayout>
 
     <Button

@@ -72,4 +72,9 @@
         <item name="android:src">@drawable/ic_right_arrow_ripple_background</item>
     </style>
 
+    <style name="TextInputLayoutUrlTheme" parent="Widget.Design.TextInputLayout">
+        <item name="android:textSize">20sp</item>
+        <item name="colorControlActivated">#C74646</item>
+    </style>
+
 </resources>

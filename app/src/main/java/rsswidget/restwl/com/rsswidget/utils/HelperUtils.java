@@ -26,7 +26,7 @@ public class HelperUtils {
         return formatter.format(date);
     }
 
-    public static boolean urlStrIsValidFormat(String urlString) {
+    public static boolean urlIsValid(String urlString) {
         try {
             URL url = new URL(urlString);
             return true;

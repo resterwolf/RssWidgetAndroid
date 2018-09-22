@@ -14,6 +14,11 @@
     <string name="settings_activity_button_commit_title">Применить</string>
     <string name="settings_activity_button_clear_black_list_title"><u>Очистить все</u></string>
     <string name="settings_activity_rv_black_list_news">Список скрытых новостей:</string>
+    <string name="settings_activity_invalid_format_url">Неверный формат URL</string>
+    <string name="settings_activity_empty_enter">Пустой ввод</string>
+    <string name="settings_activity_unidentified_error">Неопознанная ошибка</string>
+    <string name="settings_activity_remote_resource_not_rss_service">Ресурс не является rss сервисом</string>
+    <string name="settings_activity_connection_error">Ошибка подключения</string>
 
     <string name="placeholder_string_tab_text">\t%s</string>
     <string name="placeholder_string_tab_number_text">\t%d. %s</string>

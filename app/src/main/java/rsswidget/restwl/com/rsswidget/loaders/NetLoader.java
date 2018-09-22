@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.AsyncTaskLoader;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import rsswidget.restwl.com.rsswidget.database.DatabaseManager;
@@ -51,18 +53,25 @@ public class NetLoader extends AsyncTaskLoader<LoaderData> {
     @Override
     public LoaderData loadInBackground() {
         if (urlString == null) return null;
+        InputStream contentInputStream = null;
         try {
             HttpConnector connector = new HttpConnector(urlString);
-            newsList = XmlParser.parseRssData(connector.getContentStream());
-            if (newsList == null) {
-                status = LoaderData.Status.RemoteResourceInvalid;
-            }
-            databaseManager.deleteAllEntryFromNews();
-            databaseManager.insertEntriesInNews(newsList);
-        } catch (Exception ex) {
+            contentInputStream = connector.getContentStream();
+        } catch (IOException ex) {
             ex.printStackTrace();
-            status = LoaderData.Status.Error;
+            status = LoaderData.Status.NetworkError;
         }
+        if (status == LoaderData.Status.Success) {
+            try {
+                newsList = XmlParser.parseRssData(contentInputStream);
+                databaseManager.deleteAllEntryFromNews();
+                databaseManager.insertEntriesInNews(newsList);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                status = LoaderData.Status.RemoteResourceNotRssService;
+            }
+        }
+
         return new LoaderData(urlString, newsList, status);
     }
 
