@@ -10,14 +10,12 @@ import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 
-import rsswidget.restwl.com.rsswidget.model.LocalNews;
 import rsswidget.restwl.com.rsswidget.model.News;
-import rsswidget.restwl.com.rsswidget.model.RemoteNews;
 
 public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
 
-    public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "RssWidget.db";
+    private static final int DATABASE_VERSION = 1;
+    private static final String DATABASE_NAME = "RssWidget.db";
 
     private static final String NEWS_TABLE_NAME = "NEWS_TABLE";
     private static final String BLACK_LIST_TABLE_NAME = "BLACK_LIST_TABLE";
@@ -68,7 +66,7 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
         onUpgrade(db, oldVersion, newVersion);
     }
 
-    public boolean insertEntryInNews(RemoteNews news) {
+    public boolean insertEntryInNews(News news) {
         SQLiteDatabase db = getWritableDatabase();
 
         SQLiteStatement sqLiteStatement = db.compileStatement("insert into " + NEWS_TABLE_NAME +
@@ -76,20 +74,19 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
                 "values (?,?,?,?);");
         sqLiteStatement.bindString(1, news.getTitle());
         sqLiteStatement.bindString(2, news.getDescription());
-        if (news.convertDate() != null)
-            sqLiteStatement.bindLong(3, news.convertDate().getTime());
+        sqLiteStatement.bindLong(3, news.getPubDate().getTime());
         sqLiteStatement.bindString(4, news.getLink());
         return sqLiteStatement.executeInsert() != -1;
     }
 
-    public void insertEntriesInNews(List<RemoteNews> newsList) {
-        for (RemoteNews news : newsList) {
+    public void insertEntriesInNews(List<News> newsList) {
+        for (News news : newsList) {
             insertEntryInNews(news);
         }
     }
 
-    public List<LocalNews> extractAllEntryFromNews() {
-        List<LocalNews> newsList = new ArrayList<>();
+    public List<News> extractAllEntryFromNews() {
+        List<News> newsList = new ArrayList<>();
         SQLiteDatabase db = getReadableDatabase();
 
         Cursor cursor = db.rawQuery("select * from " + NEWS_TABLE_NAME, null);
@@ -98,10 +95,10 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
                 int id = cursor.getInt(cursor.getColumnIndex(_ID));
                 String title = cursor.getString(cursor.getColumnIndex(TITLE));
                 String description = cursor.getString(cursor.getColumnIndex(DESCRIPTION));
-                long pubDate = cursor.getLong(cursor.getColumnIndex(PUB_DATE));
                 String link = cursor.getString(cursor.getColumnIndex(LINK));
+                long pubDate = cursor.getLong(cursor.getColumnIndex(PUB_DATE));
 
-                newsList.add(new LocalNews(id, title, description, pubDate, link));
+                newsList.add(new News(id, title, description, link, pubDate));
                 cursor.moveToNext();
             }
             cursor.close();
@@ -114,9 +111,9 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
         db.execSQL("DELETE FROM " + NEWS_TABLE_NAME);
     }
 
-    public List<LocalNews> extractAllEntryFromBlackList() {
-        List<LocalNews> newsList = new ArrayList<>();
+    public List<News> extractAllEntryFromBlackList() {
         SQLiteDatabase db = getReadableDatabase();
+        List<News> newsList = new ArrayList<>();
 
         Cursor cursor = db.rawQuery("select * from " + BLACK_LIST_TABLE_NAME, null);
         if (cursor.moveToFirst()) {
@@ -124,10 +121,9 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
                 int id = cursor.getInt(cursor.getColumnIndex(_ID));
                 String title = cursor.getString(cursor.getColumnIndex(TITLE));
                 String description = cursor.getString(cursor.getColumnIndex(DESCRIPTION));
-                long pubDate = cursor.getLong(cursor.getColumnIndex(PUB_DATE));
                 String link = cursor.getString(cursor.getColumnIndex(LINK));
-
-                newsList.add(new LocalNews(id, title, description, pubDate, link));
+                long pubDate = cursor.getLong(cursor.getColumnIndex(PUB_DATE));
+                newsList.add(new News(id, title, description, link, pubDate));
                 cursor.moveToNext();
             }
             cursor.close();
@@ -143,13 +139,12 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
                 "values (?,?,?,?);");
         sqLiteStatement.bindString(1, news.getTitle());
         sqLiteStatement.bindString(2, news.getDescription());
-        if (news.convertDate() != null)
-            sqLiteStatement.bindLong(3, news.convertDate().getTime());
+        sqLiteStatement.bindLong(3, news.getPubDate().getTime());
         sqLiteStatement.bindString(4, news.getLink());
         return sqLiteStatement.executeInsert() != -1;
     }
 
-    public boolean removeEntryFromBlackList(LocalNews news) {
+    public boolean removeEntryFromBlackList(News news) {
         SQLiteDatabase db = getWritableDatabase();
         String selection = _ID + " = ?";
         String[] selectionArgs = {String.valueOf(news.getId())};

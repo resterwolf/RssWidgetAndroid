@@ -13,7 +13,6 @@ import android.view.View;
 import android.widget.RemoteViews;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -21,7 +20,6 @@ import java.util.concurrent.Executors;
 import rsswidget.restwl.com.rsswidget.R;
 import rsswidget.restwl.com.rsswidget.activities.SettingsActivity;
 import rsswidget.restwl.com.rsswidget.database.DatabaseManager;
-import rsswidget.restwl.com.rsswidget.model.LocalNews;
 import rsswidget.restwl.com.rsswidget.model.News;
 import rsswidget.restwl.com.rsswidget.receiver.UpdateReceiver;
 import rsswidget.restwl.com.rsswidget.utils.Constants;
@@ -32,7 +30,7 @@ import static rsswidget.restwl.com.rsswidget.utils.Constants.*;
 
 public class RssWidgetProvider extends AppWidgetProvider {
 
-    private static final List<LocalNews> newsList = new ArrayList<>();
+    private static final List<News> newsList = new ArrayList<>();
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -93,11 +91,11 @@ public class RssWidgetProvider extends AppWidgetProvider {
                 currentNewsIndex = 0;
             }
 
-            LocalNews news = newsList.get(currentNewsIndex);
+            News news = newsList.get(currentNewsIndex);
             String newsTitle = String.format(context.getString(R.string.news_title_placeholder), currentNewsIndex + 1, news.getTitle());
             remoteViews.setTextViewText(R.id.tv_news_title, newsTitle);
             remoteViews.setTextViewText(R.id.tv_news_description, news.getDescription());
-            remoteViews.setTextViewText(R.id.tv_news_pub_date, HelperUtils.convertDateToRuLocal(news.convertDate()));
+            remoteViews.setTextViewText(R.id.tv_news_pub_date, HelperUtils.convertDateToRuLocal(news.getPubDate()));
             remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, getPendingIntentActionView(context, news.getLink()));
         }
         appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
@@ -156,8 +154,8 @@ public class RssWidgetProvider extends AppWidgetProvider {
     private void extractAndSetDataFromDatabase(Context context) {
         Runnable runnable = () -> {
             try (DatabaseManager databaseManager = new DatabaseManager(context)) {
-                List<LocalNews> allNews = databaseManager.extractAllEntryFromNews();
-                List<LocalNews> blackListNews = databaseManager.extractAllEntryFromBlackList();
+                List<News> allNews = databaseManager.extractAllEntryFromNews();
+                List<News> blackListNews = databaseManager.extractAllEntryFromBlackList();
                 allNews.removeAll(blackListNews);
                 newsList.clear();
                 newsList.addAll(allNews);

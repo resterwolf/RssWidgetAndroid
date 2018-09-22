@@ -1,17 +1,50 @@
 package rsswidget.restwl.com.rsswidget.model;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
-public abstract class News {
+public class News {
 
+    private int id;
     private String title;
     private String description;
     private String link;
+    private Date pubDate;
 
-    public News(String title, String description, String link) {
+    private News(int id, String title, String description, String link) {
+        this.id = id;
         this.title = title;
         this.description = description;
         this.link = link;
+    }
+
+    public News(int id, String title, String description, String link, Date pubDate) {
+        this(id, title, description, link);
+        this.pubDate = pubDate;
+    }
+
+    public News(String title, String description, String link, String pubDate) throws ParseException {
+        this(0, title, description, link);
+        DateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.ENGLISH);
+        this.pubDate = formatter.parse(pubDate);
+    }
+
+    public News(int id, String title, String description, String link, long pubDate) {
+        this(id, title, description, link);
+        this.pubDate = new Date(pubDate);
+    }
+
+    public News(int id, String title, String description, String link, String pubDate) throws ParseException {
+        this(id, title, description, link);
+        DateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.ENGLISH);
+        this.pubDate = formatter.parse(pubDate);
+    }
+
+    public int getId() {
+        return id;
     }
 
     public String getTitle() {
@@ -26,7 +59,9 @@ public abstract class News {
         return link;
     }
 
-    public abstract Date convertDate();
+    public Date getPubDate() {
+        return pubDate;
+    }
 
     @Override
     public boolean equals(Object other) {

@@ -4,7 +4,11 @@ import android.appwidget.AppWidgetManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,11 +29,10 @@ import java.util.concurrent.Executors;
 import rsswidget.restwl.com.rsswidget.R;
 import rsswidget.restwl.com.rsswidget.adapters.RVBlackListAdapter;
 import rsswidget.restwl.com.rsswidget.database.DatabaseManager;
-import rsswidget.restwl.com.rsswidget.model.LocalNews;
+import rsswidget.restwl.com.rsswidget.loaders.BlackListLoader;
+import rsswidget.restwl.com.rsswidget.loaders.NetLoader;
+import rsswidget.restwl.com.rsswidget.model.LoaderData;
 import rsswidget.restwl.com.rsswidget.model.News;
-import rsswidget.restwl.com.rsswidget.model.RemoteNews;
-import rsswidget.restwl.com.rsswidget.network.HttpConnector;
-import rsswidget.restwl.com.rsswidget.network.parsers.XmlParser;
 import rsswidget.restwl.com.rsswidget.utils.Constants;
 import rsswidget.restwl.com.rsswidget.utils.HelperUtils;
 import rsswidget.restwl.com.rsswidget.utils.PreferencesManager;
@@ -36,18 +40,20 @@ import rsswidget.restwl.com.rsswidget.widgedprovider.RssWidgetProvider;
 
 import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_DATASET_CHANGED;
 import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_OPEN_SETTINGS;
+import static rsswidget.restwl.com.rsswidget.utils.Constants.EXTRA_URL;
 import static rsswidget.restwl.com.rsswidget.utils.Constants.TAG;
 
-public class SettingsActivity extends AppCompatActivity implements RVBlackListAdapter.CellClickListener {
+public class SettingsActivity extends AppCompatActivity implements RVBlackListAdapter.CellClickListener,
+        LoaderManager.LoaderCallbacks<LoaderData> {
 
     private ExecutorService executor;
     private int mAppWidgetId;
-    private List<LocalNews> newsList = new ArrayList<>();
+    private List<News> newsList = new ArrayList<>();
     private ConfigurationFlag flag = ConfigurationFlag.Initial;
 
     // UI
     private TextInputEditText editTextUrl;
-    private Button buttonContinue, buttonClearBlackList;
+    private Button buttonCommit, buttonClearBlackList;
     private ProgressBar progressBar;
     private RecyclerView recyclerView;
 
@@ -61,7 +67,16 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         executor = Executors.newSingleThreadExecutor();
         handleIndent();
         initRecyclerView();
-        updateAsyncCurrentDataFromBlackListDb();
+        executeBlackListLoader();
+    }
+
+    private void executeBlackListLoader() {
+        Loader loader = getSupportLoaderManager().getLoader(BlackListLoader.LOADER_ID);
+        if (loader == null) {
+            getSupportLoaderManager().initLoader(BlackListLoader.LOADER_ID, null, this);
+        } else {
+            getSupportLoaderManager().restartLoader(BlackListLoader.LOADER_ID, null, this);
+        }
     }
 
     private void initActionBar() {
@@ -90,21 +105,36 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
     }
 
     @Override
-    public void onHideButtonClick(View view, LocalNews news, int index) {
+    public void onHideButtonClick(View view, News news, int index) {
         removeNewsFromBlackList(news);
     }
 
     @Override
-    public void onItemClick(View viewGroup, LocalNews news, int index) {
+    public void onItemClick(View viewGroup, News news, int index) {
         openNewsInActionView(news);
     }
 
-    private void removeNewsFromBlackList(LocalNews localNews) {
+    private void onButtonCommitClick(View button) {
+        String urlString = editTextUrl.getText().toString().trim();
+        if (!HelperUtils.urlStrIsValidFormat(urlString)) {
+            editTextUrl.setError("Invalid url");
+            Log.d(TAG, "SettingsActivity. Invalid url format");
+            return;
+        }
+        executeNetLoader(urlString);
+    }
+
+    private void onButtonClearBlackListClick(View view) {
+        if (newsList.isEmpty()) return;
+        clearAsyncAllEntryFromBlackListDb();
+    }
+
+    private void removeNewsFromBlackList(News news) {
         Runnable runnable = () -> {
             try (DatabaseManager databaseManager = new DatabaseManager(this)) {
-                databaseManager.removeEntryFromBlackList(localNews);
+                databaseManager.removeEntryFromBlackList(news);
                 runOnUiThread(() -> {
-                    this.newsList.remove(localNews);
+                    this.newsList.remove(news);
                     recyclerView.getAdapter().notifyDataSetChanged();
                     RssWidgetProvider.sendActionToAllWidgets(this, ACTION_DATASET_CHANGED);
                 });
@@ -118,25 +148,6 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         startActivity(intent);
     }
 
-    private void updateAsyncCurrentDataFromBlackListDb() {
-        Runnable runnable = () -> {
-            try (DatabaseManager databaseManager = new DatabaseManager(this)) {
-                List<LocalNews> localNewsList = databaseManager.extractAllEntryFromBlackList();
-                runOnUiThread(() -> {
-                    this.newsList.clear();
-                    this.newsList.addAll(localNewsList);
-                    if (recyclerView.getAdapter() == null) {
-                        RVBlackListAdapter adapter = new RVBlackListAdapter(this, newsList, this);
-                        recyclerView.setAdapter(adapter);
-                    } else {
-                        recyclerView.getAdapter().notifyDataSetChanged();
-                    }
-                });
-            }
-        };
-        executor.execute(runnable);
-    }
-
     private void initRecyclerView() {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
@@ -145,21 +156,16 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
 
     private void initViews() {
         editTextUrl = findViewById(R.id.ev_url);
-        buttonContinue = findViewById(R.id.button_continue);
+        buttonCommit = findViewById(R.id.button_commit);
         progressBar = findViewById(R.id.progressBar);
         buttonClearBlackList = findViewById(R.id.button_clear_black_list);
         recyclerView = findViewById(R.id.recycler_view_blocked_news_container);
-        buttonContinue.setOnClickListener(this::buttonContinueOnClick);
-        buttonClearBlackList.setOnClickListener(this::buttonClearBlackListOnClick);
+        buttonCommit.setOnClickListener(this::onButtonCommitClick);
+        buttonClearBlackList.setOnClickListener(this::onButtonClearBlackListClick);
         String urlString = PreferencesManager.extractUrl(this);
         if (!TextUtils.isEmpty(urlString)) {
             editTextUrl.setText(urlString);
         }
-    }
-
-    private void buttonClearBlackListOnClick(View view) {
-        if (newsList.isEmpty()) return;
-        clearAsyncAllEntryFromBlackListDb();
     }
 
     public void clearAsyncAllEntryFromBlackListDb() {
@@ -176,24 +182,25 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         executor.execute(runnable);
     }
 
-    public void buttonContinueOnClick(View button) {
-        String urlString = editTextUrl.getText().toString().trim();
-        if (!HelperUtils.urlStrIsValidFormat(urlString)) {
-            editTextUrl.setError("Invalid url");
-            Log.d(TAG, "SettingsActivity. Invalid url format");
-            return;
+    public void executeNetLoader(String urlString) {
+        Bundle bundle = new Bundle();
+        bundle.putString(EXTRA_URL, urlString);
+        Loader loader = getSupportLoaderManager().getLoader(NetLoader.LOADER_ID);
+        if (loader == null) {
+            getSupportLoaderManager().initLoader(NetLoader.LOADER_ID, bundle, this);
+        } else {
+            getSupportLoaderManager().restartLoader(NetLoader.LOADER_ID, bundle, this);
         }
-        downloadDataFromNetAndStoreInDb(urlString);
     }
 
     public void enableViewsState() {
         editTextUrl.setEnabled(true);
-        buttonContinue.setEnabled(true);
+        buttonCommit.setEnabled(true);
     }
 
     public void disableViewsState() {
         editTextUrl.setEnabled(false);
-        buttonContinue.setEnabled(false);
+        buttonCommit.setEnabled(false);
     }
 
     private void handleIndent() {
@@ -223,35 +230,6 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         }
     }
 
-    private void downloadDataFromNetAndStoreInDb(String urlString) {
-        Runnable runnable = () -> {
-            if (isFinishing()) return;
-            try {
-                HttpConnector connector = new HttpConnector(urlString);
-                List<RemoteNews> newsList = XmlParser.parseRssData(connector.getContentStream());
-                saveDateIntoDatabase(newsList);
-                PreferencesManager.putUrl(SettingsActivity.this, urlString);
-                if (flag == ConfigurationFlag.Initial) {
-                    notifyWidgetAfterInitialConfigAndCloseCurrent();
-                } else {
-                    notifyWidgetAfterCustomConfigAndCloseCurrent();
-                }
-                Log.d(TAG, "SettingsActivity: News downloaded and saved");
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            } finally {
-                runOnUiThread(() -> {
-                    hideProgress();
-                    enableViewsState();
-                });
-//                executor.shutdown();
-            }
-        };
-        disableViewsState();
-        executor.execute(runnable);
-        showProgress();
-    }
-
     private void showProgress() {
         progressBar.setVisibility(View.VISIBLE);
     }
@@ -260,14 +238,11 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         progressBar.setVisibility(View.INVISIBLE);
     }
 
-    private void notifyWidgetAfterInitialConfigAndCloseCurrent() {
+    private void notifyWidgetsConfigurationCanceled() {
         RssWidgetProvider.sendActionToAllWidgets(this, Constants.ACTION_INITIAL_CONFIG);
-        setResult(RESULT_OK, getSuccessResultIntent(mAppWidgetId));
-        finish();
-    }
-
-    private void notifyWidgetAfterCustomConfigAndCloseCurrent() {
-        RssWidgetProvider.sendActionToAllWidgets(this, Constants.ACTION_CUSTOM_CONFIG);
+        if (flag == ConfigurationFlag.Initial) {
+            setResult(RESULT_OK, getSuccessResultIntent(mAppWidgetId));
+        }
         finish();
     }
 
@@ -278,14 +253,60 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         return resultValue;
     }
 
-    private void saveDateIntoDatabase(List<RemoteNews> newsList) {
-        try (DatabaseManager databaseManager = new DatabaseManager(getApplicationContext())) {
-            databaseManager.deleteAllEntryFromNews();
-            databaseManager.insertEntriesInNews(newsList);
+    @NonNull
+    @Override
+    public Loader<LoaderData> onCreateLoader(int id, @Nullable Bundle args) {
+        Loader<LoaderData> loader = null;
+        switch (id) {
+            case NetLoader.LOADER_ID:
+                showProgress();
+                disableViewsState();
+                loader = new NetLoader(this, args);
+                break;
+            case BlackListLoader.LOADER_ID:
+                loader = new BlackListLoader(this);
+                break;
         }
+        return loader;
     }
 
-    enum ConfigurationFlag {
+    @Override
+    public void onLoadFinished(@NonNull Loader<LoaderData> loader, LoaderData loaderData) {
+        int loaderId = loader.getId();
+        switch (loaderId) {
+            case NetLoader.LOADER_ID:
+                hideProgress();
+                enableViewsState();
+                if (loaderData == null) return;
+                if (loaderData.getStatus() == LoaderData.Status.Success) {
+                    PreferencesManager.putUrl(SettingsActivity.this, loaderData.getUrlString());
+                    notifyWidgetsConfigurationCanceled();
+                } else {
+                    Toast.makeText(this, "Ошибка " + loaderData.getStatus().name(), Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case BlackListLoader.LOADER_ID:
+                List<News> localNewsList = loaderData.getListNews();
+                this.newsList.clear();
+                this.newsList.addAll(localNewsList);
+                if (recyclerView.getAdapter() == null) {
+                    RVBlackListAdapter adapter = new RVBlackListAdapter(this, newsList, this);
+                    recyclerView.setAdapter(adapter);
+                } else {
+                    recyclerView.getAdapter().notifyDataSetChanged();
+                }
+                break;
+        }
+
+
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<LoaderData> loader) {
+
+    }
+
+    private enum ConfigurationFlag {
         Initial, Custom
     }
 

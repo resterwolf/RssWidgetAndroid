@@ -13,24 +13,24 @@ import android.widget.TextView;
 import java.util.List;
 
 import rsswidget.restwl.com.rsswidget.R;
-import rsswidget.restwl.com.rsswidget.model.LocalNews;
+import rsswidget.restwl.com.rsswidget.model.News;
 import rsswidget.restwl.com.rsswidget.utils.HelperUtils;
 
 public class RVBlackListAdapter extends RecyclerView.Adapter<RVBlackListAdapter.BlackListItemViewHolder> {
 
-    private final List<LocalNews> localNews;
+    private final List<News> newsList;
     private final Resources resources;
     private final LayoutInflater layoutInflater;
     private CellClickListener listener;
 
-    public RVBlackListAdapter(Context context, List<LocalNews> localNews) {
-        this.localNews = localNews;
+    public RVBlackListAdapter(Context context, List<News> newsList) {
+        this.newsList = newsList;
         resources = context.getResources();
         layoutInflater = LayoutInflater.from(context);
     }
 
-    public RVBlackListAdapter(Context context, List<LocalNews> localNews, CellClickListener listener) {
-        this(context, localNews);
+    public RVBlackListAdapter(Context context, List<News> newsList, CellClickListener listener) {
+        this(context, newsList);
         this.listener = listener;
     }
 
@@ -43,16 +43,16 @@ public class RVBlackListAdapter extends RecyclerView.Adapter<RVBlackListAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull BlackListItemViewHolder holder, int position) {
-        LocalNews news = localNews.get(position);
+        News news = newsList.get(position);
         String strWithTab = resources.getString(R.string.string_with_tab);
         holder.tvTitle.setText(String.format(strWithTab, news.getTitle()));
         holder.tvDescription.setText(String.format(strWithTab, news.getDescription()));
-        holder.tvPubDate.setText(HelperUtils.convertDateToRuLocal(news.convertDate()));
+        holder.tvPubDate.setText(HelperUtils.convertDateToRuLocal(news.getPubDate()));
     }
 
     @Override
     public int getItemCount() {
-        return localNews.size();
+        return newsList.size();
     }
 
     class BlackListItemViewHolder extends RecyclerView.ViewHolder {
@@ -77,19 +77,19 @@ public class RVBlackListAdapter extends RecyclerView.Adapter<RVBlackListAdapter.
             int viewId = view.getId();
             switch (viewId) {
                 case R.id.button_restore:
-                    listener.onHideButtonClick(view, localNews.get(position), position);
+                    listener.onHideButtonClick(view, newsList.get(position), position);
                     break;
                 case R.id.root_container:
-                    listener.onItemClick(view, localNews.get(position), position);
+                    listener.onItemClick(view, newsList.get(position), position);
                     break;
             }
         }
     }
 
     public interface CellClickListener {
-        void onHideButtonClick(View view, LocalNews news, int index);
+        void onHideButtonClick(View view, News news, int index);
 
-        void onItemClick(View viewGroup, LocalNews news, int index);
+        void onItemClick(View viewGroup, News news, int index);
     }
 
 }

@@ -10,7 +10,7 @@ import android.util.Log;
 import java.util.List;
 
 import rsswidget.restwl.com.rsswidget.database.DatabaseManager;
-import rsswidget.restwl.com.rsswidget.model.RemoteNews;
+import rsswidget.restwl.com.rsswidget.model.News;
 import rsswidget.restwl.com.rsswidget.network.HttpConnector;
 import rsswidget.restwl.com.rsswidget.network.parsers.XmlParser;
 import rsswidget.restwl.com.rsswidget.utils.PreferencesManager;
@@ -32,7 +32,7 @@ public class RssDownloaderJobIntentService extends JobIntentService {
                 return;
             }
             HttpConnector connector = new HttpConnector(urlString);
-            List<RemoteNews> newsList = XmlParser.parseRssData(connector.getContentStream());
+            List<News> newsList = XmlParser.parseRssData(connector.getContentStream());
             databaseManager.deleteAllEntryFromNews();
             databaseManager.insertEntriesInNews(newsList);
             RssWidgetProvider.sendActionToAllWidgets(getApplicationContext(), ACTION_DATASET_CHANGED);

@@ -8,11 +8,11 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
 import rsswidget.restwl.com.rsswidget.model.News;
-import rsswidget.restwl.com.rsswidget.model.RemoteNews;
 import rsswidget.restwl.com.rsswidget.utils.HelperUtils;
 
 public class XmlParser {
@@ -24,10 +24,10 @@ public class XmlParser {
     private static final String PUB_DATE = "pubDate";
     private static final String CHANNEL = "channel";
 
-    public static List<RemoteNews> parseRssData(@Nullable InputStream inputData) throws XmlPullParserException, IOException {
+    public static List<News> parseRssData(@Nullable InputStream inputData) throws XmlPullParserException, IOException, ParseException {
         if (inputData == null) return null;
 
-        List<RemoteNews> newsList = null;
+        List<News> newsList = null;
         XmlPullParser parser = Xml.newPullParser();
 
         // auto-detect the encoding from the stream
@@ -64,7 +64,7 @@ public class XmlParser {
                 case XmlPullParser.END_TAG:
                     name = parser.getName();
                     if (name.equalsIgnoreCase(ITEM)) {
-                        newsList.add(new RemoteNews(title, description, pubDate, link));
+                        newsList.add(new News(title, description, link, pubDate));
                     } else if (name.equalsIgnoreCase(CHANNEL)) {
                         done = true;
                     }
