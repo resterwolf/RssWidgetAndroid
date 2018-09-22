@@ -20,7 +20,7 @@
             android:id="@+id/ev_url"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/hint_rss_resource"
+            android:hint="@string/settings_activity_hint_rss_resource"
             android:inputType="textUri" />
     </android.support.design.widget.TextInputLayout>
 
@@ -32,7 +32,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginTop="16dp"
         android:layout_weight="2"
-        android:text="@string/button_continue"
+        android:text="@string/settings_activity_button_commit_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/textInputLayout" />
 
@@ -41,7 +41,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="@string/list_hide_news"
+        android:text="@string/settings_activity_rv_black_list_news"
         android:textColor="@color/color_text_primary"
         android:textSize="16sp"
         android:textStyle="bold"
@@ -54,7 +54,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="12dp"
-        android:text="@string/clear_black_list"
+        android:text="@string/settings_activity_button_clear_black_list_title"
         app:layout_constraintBottom_toBottomOf="@id/tv_recycler_caption"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/tv_recycler_caption" />

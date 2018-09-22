@@ -3,6 +3,7 @@ package rsswidget.restwl.com.rsswidget.utils;
 public class Constants {
     public static final String TAG = "MyLog";
     public static final String RU_DATE_PATTERN = "dd MMMM yyyy (EEEE)";
+    public static final String RSS_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
     public static final String LOCALE_RU = "ru";
     public static final String ACTION_OPEN_SETTINGS = "ACTION_OPEN_SETTINGS";
     public static final String ACTION_HIDE_NEWS = "ACTION_HIDE_NEWS";
@@ -10,7 +11,7 @@ public class Constants {
     public static final String ACTION_CUSTOM_CONFIG = "ACTION_CUSTOM_CONFIG";
     public static final String ACTION_SHOW_PREVIOUS = "ACTION_SHOW_PREVIOUS";
     public static final String ACTION_SHOW_NEXT = "ACTION_SHOW_NEXT";
-    public static final String ACTION_DATASET_CHANGED = "ACTION_DATASET_CHANGED";
+    public static final String ACTION_UPDATE_WIDGET_DATA_AND_VIEW = "ACTION_UPDATE_WIDGET_DATA_AND_VIEW";
     public static final String ACTION_START_SERVICE = "com.restw.rsswidget.START_SERVICE";
     public static final String ACTION_BOOT_COMPLETED = "android.intent.action.BOOT_COMPLETED";
     public static final String EXTRA_URL = "EXTRA_URL";

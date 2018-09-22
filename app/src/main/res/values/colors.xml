@@ -14,4 +14,7 @@
 
     <color name="colorSettingsIcon">#4A8AD3</color>
 
+    <color name="colorUrlCommitButtonBackground">#3F51B5</color>
+    <color name="colorUrlCommitButtonBackgroundDisable">#747fbc</color>
+
 </resources>

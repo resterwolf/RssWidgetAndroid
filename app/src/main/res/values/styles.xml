@@ -46,10 +46,30 @@
     </style>
 
     <style name="ButtonStyle1" parent="Widget.AppCompat.Button">
-        <item name="android:background">@drawable/rounded_rectangle_background</item>
+        <item name="android:background">@drawable/background_rounded_commit_button_</item>
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">16sp</item>
         <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="ButtonHideStyle" parent="Widget.AppCompat.ImageButton">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:src">@drawable/ic_hide_ripple_background</item>
+    </style>
+
+    <style name="ButtonSettingsStyle" parent="Widget.AppCompat.ImageButton">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:src">@drawable/ic_settings_ripple_background</item>
+    </style>
+
+    <style name="ButtonPreviousStyle" parent="Widget.AppCompat.ImageButton">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:src">@drawable/ic_left_arrow_ripple_background</item>
+    </style>
+
+    <style name="ButtonNextStyle" parent="Widget.AppCompat.ImageButton">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:src">@drawable/ic_right_arrow_ripple_background</item>
     </style>
 
 </resources>

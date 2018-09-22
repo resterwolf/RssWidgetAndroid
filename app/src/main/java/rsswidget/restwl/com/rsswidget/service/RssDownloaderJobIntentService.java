@@ -16,7 +16,7 @@ import rsswidget.restwl.com.rsswidget.network.parsers.XmlParser;
 import rsswidget.restwl.com.rsswidget.utils.PreferencesManager;
 import rsswidget.restwl.com.rsswidget.widgedprovider.RssWidgetProvider;
 
-import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_DATASET_CHANGED;
+import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_UPDATE_WIDGET_DATA_AND_VIEW;
 import static rsswidget.restwl.com.rsswidget.utils.Constants.TAG;
 
 public class RssDownloaderJobIntentService extends JobIntentService {
@@ -35,7 +35,7 @@ public class RssDownloaderJobIntentService extends JobIntentService {
             List<News> newsList = XmlParser.parseRssData(connector.getContentStream());
             databaseManager.deleteAllEntryFromNews();
             databaseManager.insertEntriesInNews(newsList);
-            RssWidgetProvider.sendActionToAllWidgets(getApplicationContext(), ACTION_DATASET_CHANGED);
+            RssWidgetProvider.sendActionToAllWidgets(getApplicationContext(), ACTION_UPDATE_WIDGET_DATA_AND_VIEW);
             Log.d(TAG, "onStartCommand: News download and inserted");
         } catch (Exception ex) {
             ex.printStackTrace();

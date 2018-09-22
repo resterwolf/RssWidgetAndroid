@@ -81,7 +81,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
         remoteViews.setOnClickPendingIntent(R.id.button_next,
                 getPendingIntentCustomAction(context, appWidgetId, ACTION_SHOW_NEXT + appWidgetId));
         if (newsDataIsEmpty()) {
-            remoteViews.setTextViewText(R.id.tv_news_title, context.getString(R.string.news_list_empty));
+            remoteViews.setTextViewText(R.id.tv_news_title, context.getString(R.string.widget_news_list_empty));
             hideViews(remoteViews);
             remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, null);
         } else {
@@ -92,7 +92,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
             }
 
             News news = newsList.get(currentNewsIndex);
-            String newsTitle = String.format(context.getString(R.string.news_title_placeholder), currentNewsIndex + 1, news.getTitle());
+            String newsTitle = String.format(context.getString(R.string.placeholder_string_tab_number_text), currentNewsIndex + 1, news.getTitle());
             remoteViews.setTextViewText(R.id.tv_news_title, newsTitle);
             remoteViews.setTextViewText(R.id.tv_news_description, news.getDescription());
             remoteViews.setTextViewText(R.id.tv_news_pub_date, HelperUtils.convertDateToRuLocal(news.getPubDate()));
@@ -117,7 +117,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
             return;
         }
 
-        if (intentAction.equals(ACTION_DATASET_CHANGED)) {
+        if (intentAction.equals(ACTION_UPDATE_WIDGET_DATA_AND_VIEW)) {
             extractAndSetDataFromDatabase(context);
             return;
         }
@@ -141,7 +141,9 @@ public class RssWidgetProvider extends AppWidgetProvider {
                 int displayedIndex = calculateNextIndexAfterRemovingNews(shownIndex);
                 News news = newsList.remove(displayedIndex);
                 addNewsInBlockedList(context, news);
-                PreferencesManager.putNewsIndex(context, appWidgetId, displayedIndex);
+                ComponentName componentName = new ComponentName(context, RssWidgetProvider.class);
+                int[] appWidgetIds = AppWidgetManager.getInstance(context).getAppWidgetIds(componentName);
+                PreferencesManager.setIndexForAllWidgets(context, appWidgetIds, displayedIndex);
             }
             sendActionToAllWidgets(context, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
         }

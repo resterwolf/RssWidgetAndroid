@@ -1,22 +1,25 @@
 <resources>
-    <string name="app_name">RSSWidget</string>
-    <string name="settings_activity_title">Настройки</string>
+    <string name="app_name">RSS Widget</string>
+    <string name="default_content_description">image</string>
+    <string name="settings_activity_actionbar_title">Настройки</string>
 
-    <string name="news_widget_caption">Сводка новостей</string>
-    <string name="previous_news">Назад</string>
-    <string name="next_news">Дальше</string>
+    <string name="widget_caption">Сводка новостей</string>
+    <string name="widget_previous_button_title">назад</string>
+    <string name="widget_next_button_title">дальше</string>
+    <string name="widget_hide_button_title">скрыть</string>
+    <string name="widget_settings_button_title">настройки</string>
+    <string name="widget_news_list_empty">Список новостей пуст</string>
 
-    <string name="image_default_content_description">image</string>
-    <string name="news_title_placeholder">\t%d. %s</string>
-    <string name="hide_news">скрыть</string>
+    <string name="settings_activity_hint_rss_resource">Адрес ресурса</string>
+    <string name="settings_activity_button_commit_title">Применить</string>
+    <string name="settings_activity_button_clear_black_list_title"><u>Очистить все</u></string>
+    <string name="settings_activity_rv_black_list_news">Список скрытых новостей:</string>
+
+    <string name="placeholder_string_tab_text">\t%s</string>
+    <string name="placeholder_string_tab_number_text">\t%d. %s</string>
 
     <string name="sample_pub_date">12 августа 2018</string>
     <string name="sample_title">\tТаксист высадил пассажирок посреди дороги за громкий разговор</string>
     <string name="sample_description">\tВ Таиланде таксист высадил пассажирок на половине пути, потому что устал от пробок и их громкого разговора. Когда одна из девушек спросила его, почему он так поступил, он ответил, что ему лень везти их дальше. Деньги мужчина возвращать отказался. В итоге таксиста оштрафовали на три тысячи батов (6,2 тысячи рублей).</string>
-    <string name="hint_rss_resource">Адрес ресурса</string>
-    <string name="button_continue">Применить</string>
-    <string name="news_list_empty">Список новостей пуст</string>
-    <string name="list_hide_news">Список скрытых новостей:</string>
-    <string name="string_with_tab">\t%s</string>
-    <string name="clear_black_list"><u>Очистить все</u></string>
+
 </resources>

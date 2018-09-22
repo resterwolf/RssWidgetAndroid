@@ -36,4 +36,13 @@ public class PreferencesManager {
         SharedPreferences preferences = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
         preferences.edit().putInt(NEWS_KEY + appWidgetId, 0).apply();
     }
+
+    public static void setIndexForAllWidgets(Context context, int[] appWidgetIds, int index) {
+        SharedPreferences preferences = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        for (int appWidgetId : appWidgetIds) {
+            editor.putInt(NEWS_KEY + appWidgetId, index);
+        }
+        editor.apply();
+    }
 }

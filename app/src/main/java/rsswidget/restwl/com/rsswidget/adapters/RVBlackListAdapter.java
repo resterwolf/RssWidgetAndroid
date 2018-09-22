@@ -44,7 +44,7 @@ public class RVBlackListAdapter extends RecyclerView.Adapter<RVBlackListAdapter.
     @Override
     public void onBindViewHolder(@NonNull BlackListItemViewHolder holder, int position) {
         News news = newsList.get(position);
-        String strWithTab = resources.getString(R.string.string_with_tab);
+        String strWithTab = resources.getString(R.string.placeholder_string_tab_text);
         holder.tvTitle.setText(String.format(strWithTab, news.getTitle()));
         holder.tvDescription.setText(String.format(strWithTab, news.getDescription()));
         holder.tvPubDate.setText(HelperUtils.convertDateToRuLocal(news.getPubDate()));

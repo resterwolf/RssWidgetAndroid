@@ -4,7 +4,7 @@
     android:id="@+id/linearLayout_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/layout_background"
+    android:background="@drawable/background_widget_layout"
     android:clickable="true"
     android:focusable="true"
     android:orientation="vertical"
@@ -23,7 +23,7 @@
                 style="@style/text_view_caption_style"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/news_widget_caption" />
+                android:text="@string/widget_caption" />
 
             <TextView
                 android:id="@+id/tv_news_pub_date"
@@ -45,21 +45,18 @@
 
             <ImageButton
                 android:id="@+id/button_hide"
+                style="@style/ButtonHideStyle"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
-                android:background="@android:color/transparent"
-                android:contentDescription="@string/image_default_content_description"
-                android:foreground="?android:attr/selectableItemBackground"
-                android:src="@drawable/ic_hide_ripple_background" />
+                android:contentDescription="@string/widget_hide_button_title" />
 
             <ImageButton
                 android:id="@+id/button_settings"
+                style="@style/ButtonSettingsStyle"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_marginStart="12dp"
-                android:background="@android:color/transparent"
-                android:contentDescription="@string/image_default_content_description"
-                android:src="@drawable/ic_settings_ripple_background" />
+                android:contentDescription="@string/widget_settings_button_title" />
 
         </LinearLayout>
 
@@ -98,24 +95,18 @@
 
             <ImageButton
                 android:id="@+id/button_previous"
-                style="@style/test"
+                style="@style/ButtonPreviousStyle"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_marginEnd="8dp"
-                android:background="@android:color/transparent"
-                android:contentDescription="@string/image_default_content_description"
-                android:src="@drawable/ic_left_arrow_ripple_background"
-                android:text="@string/previous_news" />
+                android:contentDescription="@string/widget_previous_button_title" />
 
             <ImageButton
                 android:id="@+id/button_next"
-                style="@style/test"
+                style="@style/ButtonNextStyle"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
-                android:background="@android:color/transparent"
-                android:contentDescription="@string/image_default_content_description"
-                android:src="@drawable/ic_right_arrow_ripple_background"
-                android:text="@string/next_news" />
+                android:contentDescription="@string/widget_next_button_title" />
 
         </LinearLayout>
 

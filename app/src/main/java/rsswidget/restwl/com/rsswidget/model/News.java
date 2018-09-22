@@ -6,6 +6,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import static rsswidget.restwl.com.rsswidget.utils.Constants.RSS_DATE_FORMAT;
+
 public class News {
 
     private int id;
@@ -28,8 +30,7 @@ public class News {
 
     public News(String title, String description, String link, String pubDate) throws ParseException {
         this(0, title, description, link);
-        DateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.ENGLISH);
-        this.pubDate = formatter.parse(pubDate);
+        this.pubDate = getRssDateFormat().parse(pubDate);
     }
 
     public News(int id, String title, String description, String link, long pubDate) {
@@ -39,8 +40,7 @@ public class News {
 
     public News(int id, String title, String description, String link, String pubDate) throws ParseException {
         this(id, title, description, link);
-        DateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.ENGLISH);
-        this.pubDate = formatter.parse(pubDate);
+        this.pubDate = getRssDateFormat().parse(pubDate);
     }
 
     public int getId() {
@@ -61,6 +61,10 @@ public class News {
 
     public Date getPubDate() {
         return pubDate;
+    }
+
+    private DateFormat getRssDateFormat() {
+        return new SimpleDateFormat(RSS_DATE_FORMAT, Locale.ENGLISH);
     }
 
     @Override
