@@ -35,7 +35,7 @@
         </activity>
 
         <receiver
-            android:name=".receiver.UpdateReceiver"
+            android:name=".receiver.WidgetTasksReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>

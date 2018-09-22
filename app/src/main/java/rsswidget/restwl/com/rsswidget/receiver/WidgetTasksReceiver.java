@@ -9,7 +9,7 @@ import rsswidget.restwl.com.rsswidget.widgedprovider.RssWidgetProvider;
 
 import static rsswidget.restwl.com.rsswidget.utils.Constants.*;
 
-public class UpdateReceiver extends BroadcastReceiver {
+public class WidgetTasksReceiver extends BroadcastReceiver {
 
 
     @Override
