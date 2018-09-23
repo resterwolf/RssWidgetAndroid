@@ -77,4 +77,10 @@
         <item name="colorControlActivated">#C74646</item>
     </style>
 
+    <style name="TextViewRecyclerViewCaption">
+        <item name="android:textColor">@color/color_text_primary</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
 </resources>

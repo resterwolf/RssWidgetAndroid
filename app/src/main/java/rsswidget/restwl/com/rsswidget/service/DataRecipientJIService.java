@@ -25,17 +25,20 @@ public class DataRecipientJIService extends JobIntentService {
 
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
-        try (DatabaseManager databaseManager = new DatabaseManager(getApplicationContext())) {
-            String urlString = PreferencesManager.extractUrl(getApplicationContext());
-            if (TextUtils.isEmpty(urlString)) {
-                stopSelf();
-                return;
+        String urlString = PreferencesManager.extractUrl(getApplicationContext());
+        if (TextUtils.isEmpty(urlString)) {
+            stopSelf();
+            return;
+        }
+        try (HttpConnector connector = new HttpConnector(urlString);
+             DatabaseManager databaseManager = new DatabaseManager(getApplicationContext())) {
+            connector.sendRequest();
+            if (connector.getInputStreamServerError() == null) {
+                List<News> newsList = XmlParser.parseRssData(connector.getInputStreamContent());
+                databaseManager.deleteAllEntryFromNews();
+                databaseManager.insertEntriesInNews(newsList);
+                RssWidgetProvider.sendActionToAllWidgets(getApplicationContext(), ACTION_UPDATE_WIDGET_DATA_AND_VIEW);
             }
-            HttpConnector connector = new HttpConnector(urlString);
-            List<News> newsList = XmlParser.parseRssData(connector.getContentStream());
-            databaseManager.deleteAllEntryFromNews();
-            databaseManager.insertEntriesInNews(newsList);
-            RssWidgetProvider.sendActionToAllWidgets(getApplicationContext(), ACTION_UPDATE_WIDGET_DATA_AND_VIEW);
             Log.d(TAG, "onStartCommand: News download and inserted");
         } catch (Exception ex) {
             ex.printStackTrace();

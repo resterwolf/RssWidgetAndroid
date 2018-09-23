@@ -19,6 +19,7 @@
     <string name="settings_activity_unidentified_error">Неопознанная ошибка</string>
     <string name="settings_activity_remote_resource_not_rss_service">Ресурс не является rss сервисом</string>
     <string name="settings_activity_connection_error">Ошибка подключения</string>
+    <string name="settings_activity_server_error">Ошибка на стороне сервиса</string>
 
     <string name="placeholder_string_tab_text">\t%s</string>
     <string name="placeholder_string_tab_number_text">\t%d. %s</string>

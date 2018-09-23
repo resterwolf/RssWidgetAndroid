@@ -7,7 +7,6 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.database.ContentObserver;
 import android.net.Uri;
 import android.util.Log;
 import android.view.View;
@@ -16,7 +15,6 @@ import android.widget.RemoteViews;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -25,12 +23,18 @@ import rsswidget.restwl.com.rsswidget.activities.SettingsActivity;
 import rsswidget.restwl.com.rsswidget.database.DatabaseManager;
 import rsswidget.restwl.com.rsswidget.model.News;
 import rsswidget.restwl.com.rsswidget.receiver.WidgetTasksReceiver;
-import rsswidget.restwl.com.rsswidget.utils.WidgetConstants;
 import rsswidget.restwl.com.rsswidget.utils.HelperUtils;
 import rsswidget.restwl.com.rsswidget.utils.IndexCalculator;
 import rsswidget.restwl.com.rsswidget.utils.PreferencesManager;
+import rsswidget.restwl.com.rsswidget.utils.WidgetConstants;
 
-import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.*;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_HIDE_NEWS;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_OPEN_SETTINGS;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_SHOW_NEXT;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_SHOW_PREVIOUS;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_START_SERVICE;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_UPDATE_WIDGET_DATA_AND_VIEW;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.TAG;
 
 public class RssWidgetProvider extends AppWidgetProvider {
 
@@ -38,11 +42,6 @@ public class RssWidgetProvider extends AppWidgetProvider {
     private static final long REPEATING_TIME = TimeUnit.SECONDS.toMillis(60);
 
     private static final List<News> newsList = new ArrayList<>();
-    private final ExecutorService executor;
-
-    public RssWidgetProvider() {
-        executor = Executors.newSingleThreadExecutor();
-    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -160,17 +159,14 @@ public class RssWidgetProvider extends AppWidgetProvider {
     }
 
     private void extractAndSetDataFromDatabase(Context context) {
-        Runnable runnable = () -> {
-            try (DatabaseManager databaseManager = new DatabaseManager(context)) {
-                List<News> allNews = databaseManager.extractAllEntryFromNews();
-                List<News> blackListNews = databaseManager.extractAllEntryFromBlackList();
-                allNews.removeAll(blackListNews);
-                newsList.clear();
-                newsList.addAll(allNews);
-                sendActionToAllWidgets(context, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-            }
-        };
-        executor.execute(runnable);
+        try (DatabaseManager databaseManager = new DatabaseManager(context)) {
+            List<News> allNews = databaseManager.extractAllEntryFromNews();
+            List<News> blackListNews = databaseManager.extractAllEntryFromBlackList();
+            allNews.removeAll(blackListNews);
+            newsList.clear();
+            newsList.addAll(allNews);
+            sendActionToAllWidgets(context, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        }
     }
 
     private static PendingIntent getPendingIntent(Context context, int[] appWidgetIds, String action) {
