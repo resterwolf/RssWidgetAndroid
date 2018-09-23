@@ -9,8 +9,12 @@ public class PreferencesManager {
     public static final String NEWS_KEY = "news_key";
     public static final String PREF_URL_KEY = "url_key";
 
-    //    private static final String DEFAULT_URL = "https://lenta.ru/rss/news";
     private static final String DEFAULT_URL = null;
+
+    // Suppress default constructor for noninstantiability
+    private PreferencesManager() {
+        throw new AssertionError();
+    }
 
     public static String extractUrl(Context context) {
         SharedPreferences preferences = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);

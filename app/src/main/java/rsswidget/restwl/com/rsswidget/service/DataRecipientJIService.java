@@ -16,10 +16,10 @@ import rsswidget.restwl.com.rsswidget.network.parsers.XmlParser;
 import rsswidget.restwl.com.rsswidget.utils.PreferencesManager;
 import rsswidget.restwl.com.rsswidget.widgedprovider.RssWidgetProvider;
 
-import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_UPDATE_WIDGET_DATA_AND_VIEW;
-import static rsswidget.restwl.com.rsswidget.utils.Constants.TAG;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_UPDATE_WIDGET_DATA_AND_VIEW;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.TAG;
 
-public class RssDownloaderJobIntentService extends JobIntentService {
+public class DataRecipientJIService extends JobIntentService {
 
     public static final int JOB_ID = 1111;
 
@@ -50,6 +50,6 @@ public class RssDownloaderJobIntentService extends JobIntentService {
 
     public static void startService(Context context) {
         Intent intent = new Intent();
-        JobIntentService.enqueueWork(context, RssDownloaderJobIntentService.class, JOB_ID, intent);
+        JobIntentService.enqueueWork(context, DataRecipientJIService.class, JOB_ID, intent);
     }
 }

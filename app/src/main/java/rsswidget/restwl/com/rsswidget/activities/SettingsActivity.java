@@ -33,17 +33,17 @@ import rsswidget.restwl.com.rsswidget.R;
 import rsswidget.restwl.com.rsswidget.adapters.RVBlackListAdapter;
 import rsswidget.restwl.com.rsswidget.database.DatabaseManager;
 import rsswidget.restwl.com.rsswidget.loaders.BlackListLoader;
-import rsswidget.restwl.com.rsswidget.loaders.NetLoader;
+import rsswidget.restwl.com.rsswidget.loaders.DataRecipientLoader;
 import rsswidget.restwl.com.rsswidget.model.LoaderData;
 import rsswidget.restwl.com.rsswidget.model.News;
-import rsswidget.restwl.com.rsswidget.utils.Constants;
+import rsswidget.restwl.com.rsswidget.utils.WidgetConstants;
 import rsswidget.restwl.com.rsswidget.utils.HelperUtils;
 import rsswidget.restwl.com.rsswidget.utils.PreferencesManager;
 import rsswidget.restwl.com.rsswidget.widgedprovider.RssWidgetProvider;
 
-import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_UPDATE_WIDGET_DATA_AND_VIEW;
-import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_OPEN_SETTINGS;
-import static rsswidget.restwl.com.rsswidget.utils.Constants.EXTRA_URL;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_UPDATE_WIDGET_DATA_AND_VIEW;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_OPEN_SETTINGS;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.EXTRA_URL;
 
 public class SettingsActivity extends AppCompatActivity implements RVBlackListAdapter.CellClickListener,
         LoaderManager.LoaderCallbacks<LoaderData> {
@@ -189,11 +189,11 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
     public void executeNetLoader(String urlString) {
         Bundle bundle = new Bundle();
         bundle.putString(EXTRA_URL, urlString);
-        Loader loader = getSupportLoaderManager().getLoader(NetLoader.LOADER_ID);
+        Loader loader = getSupportLoaderManager().getLoader(DataRecipientLoader.LOADER_ID);
         if (loader == null) {
-            getSupportLoaderManager().initLoader(NetLoader.LOADER_ID, bundle, this);
+            getSupportLoaderManager().initLoader(DataRecipientLoader.LOADER_ID, bundle, this);
         } else {
-            getSupportLoaderManager().restartLoader(NetLoader.LOADER_ID, bundle, this);
+            getSupportLoaderManager().restartLoader(DataRecipientLoader.LOADER_ID, bundle, this);
         }
     }
 
@@ -249,7 +249,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
     }
 
     private void cancelConfigurationAndNotifyWidgets() {
-        RssWidgetProvider.sendActionToAllWidgets(this, Constants.ACTION_INITIAL_CONFIG);
+        RssWidgetProvider.sendActionToAllWidgets(this, WidgetConstants.ACTION_INITIAL_CONFIG);
         if (flag == ConfigurationFlag.Initial) {
             setResult(RESULT_OK, getSuccessResultIntent(mAppWidgetId));
         }
@@ -289,10 +289,10 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
     public Loader<LoaderData> onCreateLoader(int id, @Nullable Bundle args) {
         Loader<LoaderData> loader = null;
         switch (id) {
-            case NetLoader.LOADER_ID:
+            case DataRecipientLoader.LOADER_ID:
                 showProgress();
                 disableViewsState();
-                loader = new NetLoader(this, args);
+                loader = new DataRecipientLoader(this, args);
                 break;
             case BlackListLoader.LOADER_ID:
                 loader = new BlackListLoader(this);
@@ -305,7 +305,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
     public void onLoadFinished(@NonNull Loader<LoaderData> loader, LoaderData loaderData) {
         int loaderId = loader.getId();
         switch (loaderId) {
-            case NetLoader.LOADER_ID:
+            case DataRecipientLoader.LOADER_ID:
                 hideProgress();
                 enableViewsState();
                 if (loaderData == null) return;

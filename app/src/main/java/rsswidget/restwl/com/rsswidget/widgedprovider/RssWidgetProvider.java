@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
-import android.util.TimeUtils;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -24,12 +23,12 @@ import rsswidget.restwl.com.rsswidget.activities.SettingsActivity;
 import rsswidget.restwl.com.rsswidget.database.DatabaseManager;
 import rsswidget.restwl.com.rsswidget.model.News;
 import rsswidget.restwl.com.rsswidget.receiver.WidgetTasksReceiver;
-import rsswidget.restwl.com.rsswidget.utils.Constants;
+import rsswidget.restwl.com.rsswidget.utils.WidgetConstants;
 import rsswidget.restwl.com.rsswidget.utils.HelperUtils;
-import rsswidget.restwl.com.rsswidget.utils.IndexManager;
+import rsswidget.restwl.com.rsswidget.utils.IndexCalculator;
 import rsswidget.restwl.com.rsswidget.utils.PreferencesManager;
 
-import static rsswidget.restwl.com.rsswidget.utils.Constants.*;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.*;
 
 public class RssWidgetProvider extends AppWidgetProvider {
 
@@ -94,7 +93,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
             showViews(remoteViews);
 
             int currentNewsIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
-            if (IndexManager.isOutofRange(currentNewsIndex, newsList.size() - 1))
+            if (IndexCalculator.isOutofRange(currentNewsIndex, newsList.size() - 1))
                 currentNewsIndex = 0;
 
             News news = newsList.get(currentNewsIndex);
@@ -113,7 +112,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
 
         int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
 
-        if (intentAction.equals(Constants.ACTION_INITIAL_CONFIG) || intentAction.equals(Constants.ACTION_CUSTOM_CONFIG) ||
+        if (intentAction.equals(WidgetConstants.ACTION_INITIAL_CONFIG) || intentAction.equals(WidgetConstants.ACTION_CUSTOM_CONFIG) ||
                 intentAction.equals(ACTION_UPDATE_WIDGET_DATA_AND_VIEW)) {
             extractAndSetDataFromDatabase(context);
         }
@@ -138,7 +137,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
 
     private void handleHideAction(Context context, int appWidgetId) {
         int currentIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
-        int newIndex = IndexManager.nextIndexAfterRemote(currentIndex, newsList.size() - 1);
+        int newIndex = IndexCalculator.nextIndexAfterRemote(currentIndex, newsList.size() - 1);
         News news = newsList.remove(newIndex);
         addNewsInBlockedList(context, news);
         ComponentName componentName = new ComponentName(context, RssWidgetProvider.class);
@@ -148,7 +147,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
 
     private void handleNavigationAction(Context context, int appWidgetId, String action) {
         int oldIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
-        int newIndex = IndexManager.getNewNavigationIndex(action, oldIndex, newsList.size() - 1);
+        int newIndex = IndexCalculator.getNewNavigationIndex(action, oldIndex, newsList.size() - 1);
         PreferencesManager.putNewsIndex(context, appWidgetId, newIndex);
         updateWidgetView(context, AppWidgetManager.getInstance(context), appWidgetId);
     }

@@ -9,9 +9,14 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import static rsswidget.restwl.com.rsswidget.utils.Constants.*;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.*;
 
 public class HelperUtils {
+
+    // Suppress default constructor for noninstantiability
+    private HelperUtils() {
+        throw new AssertionError();
+    }
 
     public static String removeHtmlTags(String html) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {

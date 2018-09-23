@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import static rsswidget.restwl.com.rsswidget.utils.Constants.RSS_DATE_FORMAT;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.RSS_DATE_FORMAT;
 
 public class News {
 

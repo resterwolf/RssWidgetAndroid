@@ -1,6 +1,12 @@
 package rsswidget.restwl.com.rsswidget.utils;
 
-public class Constants {
+public class WidgetConstants {
+
+    // Suppress default constructor for noninstantiability
+    private WidgetConstants() {
+        throw new AssertionError();
+    }
+
     public static final String TAG = "MyLog";
     public static final String RU_DATE_PATTERN = "dd MMMM yyyy (EEEE)";
     public static final String RSS_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";

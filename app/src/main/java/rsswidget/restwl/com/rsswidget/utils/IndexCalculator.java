@@ -1,8 +1,13 @@
 package rsswidget.restwl.com.rsswidget.utils;
 
-import static rsswidget.restwl.com.rsswidget.utils.Constants.ACTION_SHOW_PREVIOUS;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_SHOW_PREVIOUS;
 
-public class IndexManager {
+public class IndexCalculator {
+
+    // Suppress default constructor for noninstantiability
+    private IndexCalculator() {
+        throw new AssertionError();
+    }
 
     public static boolean isNotOutofRange(int index, int lastIndex) {
         return index >= 0 && index <= lastIndex;

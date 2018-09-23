@@ -15,9 +15,9 @@ import rsswidget.restwl.com.rsswidget.model.News;
 import rsswidget.restwl.com.rsswidget.network.HttpConnector;
 import rsswidget.restwl.com.rsswidget.network.parsers.XmlParser;
 
-import static rsswidget.restwl.com.rsswidget.utils.Constants.EXTRA_URL;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.EXTRA_URL;
 
-public class NetLoader extends AsyncTaskLoader<LoaderData> {
+public class DataRecipientLoader extends AsyncTaskLoader<LoaderData> {
 
     public static final int LOADER_ID = 1010;
 
@@ -26,7 +26,7 @@ public class NetLoader extends AsyncTaskLoader<LoaderData> {
     private List<News> newsList;
     private DatabaseManager databaseManager;
 
-    public NetLoader(Context context, Bundle args) {
+    public DataRecipientLoader(Context context, Bundle args) {
         super(context);
         databaseManager = new DatabaseManager(context);
         if (args != null) {

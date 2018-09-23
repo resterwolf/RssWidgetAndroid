@@ -4,13 +4,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import rsswidget.restwl.com.rsswidget.service.RssDownloaderJobIntentService;
+import rsswidget.restwl.com.rsswidget.service.DataRecipientJIService;
 import rsswidget.restwl.com.rsswidget.widgedprovider.RssWidgetProvider;
 
-import static rsswidget.restwl.com.rsswidget.utils.Constants.*;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.*;
 
 public class WidgetTasksReceiver extends BroadcastReceiver {
-
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -25,7 +24,7 @@ public class WidgetTasksReceiver extends BroadcastReceiver {
         // We don't need to care that Android might go to sleep mode, that's why we also don't need to use power manager,
         // JobIntentService will handle everything for us
         if (intent.getAction().equals(ACTION_START_SERVICE)) {
-            RssDownloaderJobIntentService.startService(context);
+            DataRecipientJIService.startService(context);
         }
     }
 
