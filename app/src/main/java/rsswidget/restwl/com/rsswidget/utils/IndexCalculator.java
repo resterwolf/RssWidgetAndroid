@@ -9,11 +9,11 @@ public class IndexCalculator {
         throw new AssertionError();
     }
 
-    public static boolean isNotOutofRange(int index, int lastIndex) {
+    public static boolean isNotOutOfRange(int index, int lastIndex) {
         return index >= 0 && index <= lastIndex;
     }
 
-    public static boolean isOutofRange(int index, int lastIndex) {
+    public static boolean isOutOfRange(int index, int lastIndex) {
         return index < 0 && index > lastIndex;
     }
 
@@ -27,9 +27,9 @@ public class IndexCalculator {
 
     public static int getNewNavigationIndex(String action, int oldIndex, int lastIndex) {
         if (action.contains(ACTION_SHOW_PREVIOUS)) {
-            return oldIndex == 0 ? lastIndex : --oldIndex;
+            return getPreviousPresentIndex(oldIndex, lastIndex);
         } else {
-            return oldIndex == lastIndex ? 0 : ++oldIndex;
+            return getNextPresentIndex(oldIndex, lastIndex);
         }
     }
 
