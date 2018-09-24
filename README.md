@@ -1,1 +1,1 @@
-# Test project RssWindgerAndroid
+# Test project RssWidgetAndroid
