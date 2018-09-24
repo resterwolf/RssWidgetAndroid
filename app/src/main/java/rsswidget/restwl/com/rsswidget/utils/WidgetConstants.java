@@ -13,8 +13,6 @@ public class WidgetConstants {
     public static final String LOCALE_RU = "ru";
     public static final String ACTION_OPEN_SETTINGS = "ACTION_OPEN_SETTINGS";
     public static final String ACTION_HIDE_NEWS = "ACTION_HIDE_NEWS";
-    public static final String ACTION_INITIAL_CONFIG = "ACTION_INITIAL_CONFIG";
-    public static final String ACTION_CUSTOM_CONFIG = "ACTION_CUSTOM_CONFIG";
     public static final String ACTION_SHOW_PREVIOUS = "ACTION_SHOW_PREVIOUS";
     public static final String ACTION_SHOW_NEXT = "ACTION_SHOW_NEXT";
     public static final String ACTION_START_SERVICE = "com.restw.rsswidget.START_SERVICE";

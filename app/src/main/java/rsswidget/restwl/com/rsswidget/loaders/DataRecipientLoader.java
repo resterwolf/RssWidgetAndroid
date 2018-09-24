@@ -44,35 +44,25 @@ public class DataRecipientLoader extends AsyncTaskLoader<LoaderData> {
     @Override
     public LoaderData loadInBackground() {
         if (urlString == null) return null;
-        HttpConnector connector = null;
-        try {
-            connector = new HttpConnector(urlString);
+        try (HttpConnector connector = new HttpConnector(urlString)) {
             connector.sendRequest();
             if (connector.getInputStreamServerError() != null) {
                 status = LoaderData.Status.ServerError;
+            } else {
+                status = LoaderData.Status.Success;
+                try {
+                    newsList = XmlParser.parseRssData(connector.getInputStreamContent());
+                    WidgetContentProvider.clearNewsTable(getContext());
+                    WidgetContentProvider.insertAllNewsInNewsTable(getContext(), newsList);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    status = LoaderData.Status.ResourceIsNotRssService;
+                }
             }
         } catch (IOException ex) {
             ex.printStackTrace();
             status = LoaderData.Status.NetworkError;
         }
-        if (status == LoaderData.Status.Success) {
-            try {
-                newsList = XmlParser.parseRssData(connector.getInputStreamContent());
-                WidgetContentProvider.clearNewsTable(getContext());
-                WidgetContentProvider.insertAllNewsInNewsTable(getContext(),newsList);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                status = LoaderData.Status.RemoteResourceNotRssService;
-            } finally {
-                try {
-                    connector.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
         return new LoaderData(urlString, newsList, status);
     }
-
 }

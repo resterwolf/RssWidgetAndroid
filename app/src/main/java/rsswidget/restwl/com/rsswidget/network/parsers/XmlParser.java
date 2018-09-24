@@ -38,7 +38,7 @@ public class XmlParser {
         String pubDate = null;
         String link = null;
         while (eventType != XmlPullParser.END_DOCUMENT && !done) {
-            String name = null;
+            String name;
             switch (eventType) {
                 case XmlPullParser.START_DOCUMENT:
                     break;

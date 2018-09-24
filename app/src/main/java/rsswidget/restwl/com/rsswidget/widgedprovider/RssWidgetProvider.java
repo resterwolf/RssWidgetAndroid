@@ -88,7 +88,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
         List<News> newsList = News.parseNewsCursor(cursor);
 
         if (!newsList.isEmpty()) {
-            showViews(remoteViews);
+            setViewsVisible(remoteViews);
             News news = newsList.get(index);
             String newsTitle = String.format(context.getString(R.string.placeholder_string_tab_number_text), index + 1, news.getTitle());
             remoteViews.setTextViewText(R.id.tv_news_title, newsTitle);
@@ -96,7 +96,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
             remoteViews.setTextViewText(R.id.tv_news_pub_date, HelperUtils.convertDateToRuLocal(news.getPubDate()));
             remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, getPendingIntentActionView(context, news.getLink()));
         } else {
-            hideViews(remoteViews);
+            setViewsInvisible(remoteViews);
             remoteViews.setTextViewText(R.id.tv_news_title, context.getString(R.string.widget_news_list_empty));
             remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, null);
         }
@@ -112,19 +112,12 @@ public class RssWidgetProvider extends AppWidgetProvider {
         Cursor cursor = WidgetContentProvider.getAllFilteredNewsFromDatabase(context);
         List<News> newsList = News.parseNewsCursor(cursor);
 
-        if (intentAction.equals(WidgetConstants.ACTION_INITIAL_CONFIG) || intentAction.equals(WidgetConstants.ACTION_CUSTOM_CONFIG)) {
-            sendActionToAllWidgets(context, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        }
-
         if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
             if (intentAction.equals(ACTION_SHOW_PREVIOUS + appWidgetId) || intentAction.equals(ACTION_SHOW_NEXT + appWidgetId)) {
-                if (newsList.isEmpty()) {
-
-                } else {
+                if (!newsList.isEmpty()) {
                     handleNavigationAction(context, appWidgetId, intentAction, newsList);
                 }
             }
-
             if (intentAction.equals(ACTION_HIDE_NEWS)) {
                 if (!newsList.isEmpty())
                     handleHideAction(context, appWidgetId, newsList);
@@ -176,7 +169,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
         return PendingIntent.getActivity(context, 0, intent, 0);
     }
 
-    public static void showViews(RemoteViews remoteViews) {
+    public static void setViewsVisible(RemoteViews remoteViews) {
         remoteViews.setViewVisibility(R.id.button_hide, View.VISIBLE);
         remoteViews.setViewVisibility(R.id.button_next, View.VISIBLE);
         remoteViews.setViewVisibility(R.id.button_previous, View.VISIBLE);
@@ -185,7 +178,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
         remoteViews.setViewVisibility(R.id.tv_news_pub_date, View.VISIBLE);
     }
 
-    public static void hideViews(RemoteViews remoteViews) {
+    public static void setViewsInvisible(RemoteViews remoteViews) {
         remoteViews.setViewVisibility(R.id.button_hide, View.INVISIBLE);
         remoteViews.setViewVisibility(R.id.button_next, View.INVISIBLE);
         remoteViews.setViewVisibility(R.id.button_previous, View.INVISIBLE);

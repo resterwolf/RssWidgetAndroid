@@ -31,6 +31,6 @@ public class LoaderData {
     }
 
     public enum Status {
-        Success, RemoteResourceNotRssService, NetworkError, ServerError;
+        Success, ResourceIsNotRssService, NetworkError, ServerError;
     }
 }

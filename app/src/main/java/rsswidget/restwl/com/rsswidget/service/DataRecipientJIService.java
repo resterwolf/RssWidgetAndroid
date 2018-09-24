@@ -36,9 +36,12 @@ public class DataRecipientJIService extends JobIntentService {
                 List<News> newsList = XmlParser.parseRssData(connector.getInputStreamContent());
                 WidgetContentProvider.insertAllNewsInNewsTable(getApplicationContext(), newsList);
                 RssWidgetProvider.sendActionToAllWidgets(getApplicationContext(), AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            } else {
+                Log.d(TAG, "DataRecipientJIService: News download failed. Server error");
             }
             Log.d(TAG, "DataRecipientJIService: News download and insert");
         } catch (Exception ex) {
+            Log.d(TAG, "DataRecipientJIService: News download failed. Network error");
             ex.printStackTrace();
         }
         stopSelf();

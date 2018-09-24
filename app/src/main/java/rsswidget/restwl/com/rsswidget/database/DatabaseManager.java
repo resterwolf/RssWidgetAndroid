@@ -108,10 +108,6 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
         long pubDate = contentValues.getAsLong(PUB_DATE);
         String link = contentValues.getAsString(LINK);
 
-//        String existingRow = "select count(*) from " + NEWS_TABLE_NAME + " where " + TITLE + " = " + title + " AND " +
-//                DESCRIPTION + " = " + description + " AND " +
-//                PUB_DATE + " = " + pubDate + " AND " +
-//                LINK + " = " + link;
         String existEntrySqlQuery = "select * from " + NEWS_TABLE_NAME + " where " + TITLE + " = '" + title + "' AND " +
                 DESCRIPTION + " = '" + description + "' AND " +
                 PUB_DATE + " = '" + pubDate + "' AND " +

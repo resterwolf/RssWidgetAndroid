@@ -19,9 +19,7 @@ public class HttpConnector implements Closeable {
     public static final int DEFAULT_CONNECTION_TIMEOUT = 10000;
 
     private InputStream inputStreamContent;
-    //    private InputStreamReader inputStreamReaderContent;
     private InputStream inputStreamServerError;
-//    private InputStreamReader inputStreamReaderServerError;
 
     public HttpConnector(String connectionStr) throws MalformedURLException {
         this(connectionStr, DEFAULT_CONNECTION_TIMEOUT);
@@ -31,26 +29,6 @@ public class HttpConnector implements Closeable {
         this.urlString = new URL(urlString);
         this.connectionTimeout = connectionTimeout;
     }
-
-//    public String sendRequest() throws IOException {
-//        HttpURLConnection connection = (HttpURLConnection) urlString.openConnection();
-//        connection.setRequestMethod(HTTP_GET);
-//        connection.setReadTimeout(connectionTimeout);
-//        connection.connect();
-//
-//        if (connection.getErrorStream() != null) {
-//            throw new ConnectException();
-//        }
-//
-//        try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-//            StringBuilder buf = new StringBuilder();
-//            String line;
-//            while ((line = reader.readLine()) != null) {
-//                buf.append(line).append("\n");
-//            }
-//            return buf.toString();
-//        }
-//    }
 
     public void sendRequest() throws IOException {
         HttpURLConnection connection = (HttpURLConnection) urlString.openConnection();

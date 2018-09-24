@@ -65,6 +65,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         initViews();
         handleIndent();
         initRecyclerView();
+        fetchBlackListData();
     }
 
     @Override
@@ -91,7 +92,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
 
     @Override
     public void onHideButtonClick(View view, News news, int index) {
-        WidgetContentProvider.deleteEntryBlackListTable(this,news.getId());
+        WidgetContentProvider.deleteEntryBlackListTable(this, news.getId());
         newsList.remove(news);
         rvBlackList.getAdapter().notifyDataSetChanged();
         RssWidgetProvider.sendActionToAllWidgets(this, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
@@ -114,7 +115,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
 
         if (HelperUtils.urlIsValid(newUrlString)) {
             if (TextUtils.equals(prefUrlString, newUrlString)) {
-                cancelConfigurationAndNotifyWidgets();
+                finishCurrentAndNotifyWidgets();
                 return;
             }
             executeNetLoader(newUrlString);
@@ -174,7 +175,9 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         rvBlackList.setLayoutManager(linearLayoutManager);
         rvBlackList.setHasFixedSize(true);
+    }
 
+    private void fetchBlackListData() {
         Cursor cursor = WidgetContentProvider.getAllEntryFromBlackListTable(this);
         this.newsList.clear();
         this.newsList.addAll(News.parseNewsCursor(cursor));
@@ -220,25 +223,21 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         progressBar.setVisibility(View.INVISIBLE);
     }
 
-    private void cancelConfigurationAndNotifyWidgets() {
-        RssWidgetProvider.sendActionToAllWidgets(this, WidgetConstants.ACTION_INITIAL_CONFIG);
+    private void finishCurrentAndNotifyWidgets() {
+        RssWidgetProvider.sendActionToAllWidgets(this, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
         if (flag == ConfigurationFlag.Initial) {
-            setResult(RESULT_OK, getSuccessResultIntent(mAppWidgetId));
+            Intent resultValue = new Intent();
+            resultValue.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+            setResult(RESULT_OK, resultValue);
         }
         finish();
-    }
-
-    private Intent getSuccessResultIntent(int appWidgetId) {
-        Intent resultValue = new Intent();
-        resultValue.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-        return resultValue;
     }
 
     private void handleLoaderDataStatus(LoaderData.Status status) {
         String errorMessage = getString(R.string.settings_activity_unidentified_error);
         switch (status) {
-            case RemoteResourceNotRssService:
+            case ResourceIsNotRssService:
                 errorMessage = getString(R.string.settings_activity_remote_resource_not_rss_service);
                 break;
             case NetworkError:
@@ -285,7 +284,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
                 if (loaderData == null) return;
                 if (loaderData.getStatus() == LoaderData.Status.Success) {
                     PreferencesManager.putUrl(SettingsActivity.this, loaderData.getUrlString());
-                    cancelConfigurationAndNotifyWidgets();
+                    finishCurrentAndNotifyWidgets();
                 } else {
                     handleLoaderDataStatus(loaderData.getStatus());
                 }
