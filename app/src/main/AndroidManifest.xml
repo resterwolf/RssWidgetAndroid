@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="rsswidget.restwl.com.rsswidget">
+    package="com.restwl.rsswidget">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -15,7 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <receiver android:name=".widgedprovider.RssWidgetProvider">
+        <receiver android:name="com.restwl.rsswidget.widgedprovider.RssWidgetProvider">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -26,10 +26,10 @@
 
         <provider
             android:authorities="com.restwl.provider.RssWidget"
-            android:name=".contentprovider.WidgetContentProvider"/>
+            android:name="com.restwl.rsswidget.contentprovider.WidgetContentProvider"/>
 
         <activity
-            android:name=".activities.SettingsActivity"
+            android:name="com.restwl.rsswidget.activities.SettingsActivity"
             android:label="@string/settings_activity_actionbar_title"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -38,7 +38,7 @@
         </activity>
 
         <receiver
-            android:name=".receiver.WidgetTasksReceiver"
+            android:name="com.restwl.rsswidget.receiver.WidgetTasksReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -48,7 +48,7 @@
         </receiver>
 
         <service
-            android:name=".service.DataRecipientJIService"
+            android:name="com.restwl.rsswidget.service.DataRecipientJIService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
