@@ -13,6 +13,7 @@ import com.restwl.rsswidget.model.LoaderData;
 import com.restwl.rsswidget.model.News;
 import com.restwl.rsswidget.network.HttpConnector;
 import com.restwl.rsswidget.network.parsers.XmlParser;
+import com.restwl.rsswidget.utils.PreferencesManager;
 
 import static com.restwl.rsswidget.utils.WidgetConstants.EXTRA_URL;
 
@@ -54,6 +55,7 @@ public class DataRecipientLoader extends AsyncTaskLoader<LoaderData> {
                     newsList = XmlParser.parseRssData(connector.getInputStreamContent());
                     WidgetContentProvider.clearNewsTable(getContext());
                     WidgetContentProvider.insertAllNewsInNewsTable(getContext(), newsList);
+                    PreferencesManager.setRssChannelItemsCount(getContext(), newsList.size());
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     status = LoaderData.Status.ResourceIsNotRssService;

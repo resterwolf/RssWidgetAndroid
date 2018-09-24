@@ -121,6 +121,14 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
         return db.delete(NEWS_TABLE_NAME, selection, selectionArgs);
     }
 
+    public void deleteEntryByDateFromNewsTable(String offset) {
+        SQLiteDatabase db = getWritableDatabase();
+        String sqlQuery = "DELETE FROM " + NEWS_TABLE_NAME + " WHERE " + PUB_DATE +
+                " IN (SELECT " + PUB_DATE + " FROM " + NEWS_TABLE_NAME + " ORDER BY " +
+                PUB_DATE + " DESC LIMIT -1 OFFSET " + offset + ");";
+        db.execSQL(sqlQuery);
+    }
+
     public int deleteBlackListTable(@Nullable String selection, @Nullable String[] selectionArgs) {
         SQLiteDatabase db = getWritableDatabase();
         return db.delete(BLACK_LIST_TABLE_NAME, selection, selectionArgs);

@@ -8,6 +8,7 @@ public class PreferencesManager {
     public static final String PREFERENCES_KEY = "rss_widget_pref_key";
     public static final String NEWS_KEY = "news_key";
     public static final String PREF_URL_KEY = "url_key";
+    public static final String PREF_RSS_CHANNEL_ITEMS_COUNT = "resource_count";
 
     private static final String DEFAULT_URL = null;
 
@@ -26,7 +27,7 @@ public class PreferencesManager {
         preferences.edit().putString(PREF_URL_KEY, urlString).apply();
     }
 
-    public static void putNewsIndex(Context context, int appWidgetId, int index) {
+    public static void setIndexForWidget(Context context, int appWidgetId, int index) {
         SharedPreferences preferences = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
         preferences.edit().putInt(NEWS_KEY + appWidgetId, index).apply();
     }
@@ -48,5 +49,15 @@ public class PreferencesManager {
             editor.putInt(NEWS_KEY + appWidgetId, index);
         }
         editor.apply();
+    }
+
+    public static void setRssChannelItemsCount(Context context, int count) {
+        SharedPreferences preferences = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
+        preferences.edit().putInt(PREF_RSS_CHANNEL_ITEMS_COUNT, count).apply();
+    }
+
+    public static int getRssChannelItemsCount(Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
+        return preferences.getInt(PREF_RSS_CHANNEL_ITEMS_COUNT,0);
     }
 }

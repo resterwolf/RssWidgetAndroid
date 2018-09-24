@@ -24,42 +24,47 @@ public class WidgetContentProvider extends ContentProvider {
 
     private DatabaseManager databaseManager;
 
-    public static final String AUTHORITY = "com.restwl.provider.RssWidget";
+    private static final String AUTHORITY = "com.restwl.provider.RssWidget";
 
-    public static final String NEWS_PATH = "news";
-    public static final String BLACK_LIST_PATH = "blackList";
-    public static final String FILTERED_NEWS_PATH = "filteredNews";
+    private static final String NEWS_PATH = "news";
+    private static final String BLACK_LIST_PATH = "blackList";
+    private static final String FILTERED_NEWS_PATH = "filteredNews";
+    private static final String NEWS_HOUSEKEEPER_PATH = "newsHousekeeper";
 
-    public static final Uri NEWS_CONTENT_URI = Uri.parse("content://"
+    private static final Uri NEWS_CONTENT_URI = Uri.parse("content://"
             + AUTHORITY + "/" + NEWS_PATH);
-    public static final Uri BLACK_LIST_CONTENT_URI = Uri.parse("content://"
+    private static final Uri BLACK_LIST_CONTENT_URI = Uri.parse("content://"
             + AUTHORITY + "/" + BLACK_LIST_PATH);
-    public static final Uri FILTERED_NEWS_CONTENT_URI = Uri.parse("content://"
+    private static final Uri FILTERED_NEWS_CONTENT_URI = Uri.parse("content://"
             + AUTHORITY + "/" + FILTERED_NEWS_PATH);
+    private static final Uri NEWS_HOUSEKEEPER_CONTENT_URI = Uri.parse("content://"
+            + AUTHORITY + "/" + NEWS_HOUSEKEEPER_PATH);
 
-    static final String NEWS_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
+    private static final String NEWS_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
             + AUTHORITY + "." + NEWS_PATH;
-    static final String NEWS_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
+    private static final String NEWS_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
             + AUTHORITY + "." + NEWS_PATH;
-
-    static final String BLACK_LIST_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
+    private static final String BLACK_LIST_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
             + AUTHORITY + "." + BLACK_LIST_PATH;
-    static final String BLACK_LIST_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
+    private static final String BLACK_LIST_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
             + AUTHORITY + "." + BLACK_LIST_PATH;
-
-    static final String FILTERED_NEWS_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
+    private static final String FILTERED_NEWS_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
             + AUTHORITY + "." + FILTERED_NEWS_PATH;
-    static final String FILTERED_NEWS_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
+    private static final String FILTERED_NEWS_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
             + AUTHORITY + "." + FILTERED_NEWS_PATH;
+    private static final String NEWS_HOUSEKEEPER_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
+            + AUTHORITY + "." + NEWS_HOUSEKEEPER_PATH;
+    private static final String NEWS_HOUSEKEEPER_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
+            + AUTHORITY + "." + NEWS_HOUSEKEEPER_PATH;
 
-    static final int URI_NEWS = 100;
-    static final int URI_NEWS_ID = 101;
-
-    static final int URI_BLACK_LIST = 200;
-    static final int URI_BLACK_LIST_ID = 201;
-
-    static final int URI_FILTERED_NEWS = 300;
-    static final int URI_FILTERED_NEWS_ID = 301;
+    private static final int URI_NEWS = 100;
+    private static final int URI_NEWS_ID = 101;
+    private static final int URI_BLACK_LIST = 200;
+    private static final int URI_BLACK_LIST_ID = 201;
+    private static final int URI_FILTERED_NEWS = 300;
+    private static final int URI_FILTERED_NEWS_ID = 301;
+    private static final int URI_NEWS_HOUSEKEEPER = 400;
+    private static final int URI_NEWS_HOUSEKEEPER_ID = 401;
 
     // описание и создание UriMatcher
     private static final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
@@ -71,6 +76,8 @@ public class WidgetContentProvider extends ContentProvider {
         uriMatcher.addURI(AUTHORITY, BLACK_LIST_PATH + "/#", URI_BLACK_LIST_ID);
         uriMatcher.addURI(AUTHORITY, FILTERED_NEWS_PATH, URI_FILTERED_NEWS);
         uriMatcher.addURI(AUTHORITY, FILTERED_NEWS_PATH + "/#", URI_FILTERED_NEWS_ID);
+        uriMatcher.addURI(AUTHORITY, NEWS_HOUSEKEEPER_PATH, URI_NEWS_HOUSEKEEPER);
+        uriMatcher.addURI(AUTHORITY, NEWS_HOUSEKEEPER_PATH + "/#", URI_NEWS_HOUSEKEEPER_ID);
     }
 
     @Override
@@ -146,6 +153,11 @@ public class WidgetContentProvider extends ContentProvider {
                         FILTERED_NEWS_CONTENT_URI);
                 break;
 
+            case URI_NEWS_HOUSEKEEPER:
+                throw new UnsupportedOperationException();
+            case URI_NEWS_HOUSEKEEPER_ID:
+                throw new UnsupportedOperationException();
+
             default:
                 Log.d(TAG, "query: ");
                 Log.d(TAG, "uri id:");
@@ -166,6 +178,8 @@ public class WidgetContentProvider extends ContentProvider {
             long rowID = databaseManager.insertBlackListTable(contentValues);
             resultUri = ContentUris.withAppendedId(BLACK_LIST_CONTENT_URI, rowID);
         } else if (uriMatcher.match(uri) == URI_FILTERED_NEWS) {
+            throw new UnsupportedOperationException();
+        } else if (uriMatcher.match(uri) == URI_NEWS_HOUSEKEEPER) {
             throw new UnsupportedOperationException();
         } else {
             throw new IllegalArgumentException("Wrong URI: " + uri);
@@ -210,6 +224,17 @@ public class WidgetContentProvider extends ContentProvider {
             case URI_FILTERED_NEWS_ID:
                 throw new UnsupportedOperationException();
 
+            case URI_NEWS_HOUSEKEEPER:
+                throw new UnsupportedOperationException();
+            case URI_NEWS_HOUSEKEEPER_ID:
+                String offset = uri.getLastPathSegment();
+                if (TextUtils.isEmpty(offset)) {
+                    offset = String.valueOf(100);
+                }
+                databaseManager.deleteEntryByDateFromNewsTable(offset);
+                cnt = 0;
+                break;
+
             default:
                 throw new IllegalArgumentException("Wrong URI: " + uri);
         }
@@ -238,6 +263,10 @@ public class WidgetContentProvider extends ContentProvider {
                 return FILTERED_NEWS_CONTENT_TYPE;
             case URI_FILTERED_NEWS_ID:
                 return FILTERED_NEWS_CONTENT_ITEM_TYPE;
+            case URI_NEWS_HOUSEKEEPER:
+                return NEWS_HOUSEKEEPER_CONTENT_TYPE;
+            case URI_NEWS_HOUSEKEEPER_ID:
+                return NEWS_HOUSEKEEPER_CONTENT_ITEM_TYPE;
         }
         return null;
     }
@@ -314,6 +343,12 @@ public class WidgetContentProvider extends ContentProvider {
             contentValues[i] = newsList.get(i).forNewsTable();
         }
         context.getContentResolver().bulkInsert(NEWS_CONTENT_URI, contentValues);
+    }
+
+    // offset it's a saved rows after execute housekeeper
+    public static void executeHousekeeperNewsTable(Context context, int offset) {
+        Uri uri = Uri.parse("content://" + AUTHORITY + "/" + NEWS_HOUSEKEEPER_PATH + "/" + offset);
+        context.getContentResolver().delete(uri,null,null);
     }
 
 }

@@ -138,7 +138,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
     private void handleNavigationAction(Context context, int appWidgetId, String action, List<News> newsList) {
         int oldIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
         int newIndex = IndexCalculator.getNewNavigationIndex(action, oldIndex, newsList.size() - 1);
-        PreferencesManager.putNewsIndex(context, appWidgetId, newIndex);
+        PreferencesManager.setIndexForWidget(context, appWidgetId, newIndex);
         updateWidgetView(context, AppWidgetManager.getInstance(context), appWidgetId);
     }
 

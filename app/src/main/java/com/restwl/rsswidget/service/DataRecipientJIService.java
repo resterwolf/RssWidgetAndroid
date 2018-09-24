@@ -35,6 +35,8 @@ public class DataRecipientJIService extends JobIntentService {
             if (connector.getInputStreamServerError() == null) {
                 List<News> newsList = XmlParser.parseRssData(connector.getInputStreamContent());
                 WidgetContentProvider.insertAllNewsInNewsTable(getApplicationContext(), newsList);
+                int rssChannelItemsCount = PreferencesManager.getRssChannelItemsCount(getApplicationContext());
+                WidgetContentProvider.executeHousekeeperNewsTable(getApplicationContext(), rssChannelItemsCount);
                 RssWidgetProvider.sendActionToAllWidgets(getApplicationContext(), AppWidgetManager.ACTION_APPWIDGET_UPDATE);
             } else {
                 Log.d(TAG, "DataRecipientJIService: News download failed. Server error");
