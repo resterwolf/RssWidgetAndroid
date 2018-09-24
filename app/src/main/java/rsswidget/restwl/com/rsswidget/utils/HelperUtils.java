@@ -9,7 +9,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.*;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.LOCALE_RU;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.RU_DATE_PATTERN;
 
 public class HelperUtils {
 

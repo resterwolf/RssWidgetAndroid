@@ -34,7 +34,7 @@ public class IndexCalculator {
     }
 
     public static int nextIndexAfterRemote(int remoteIndex, int lastIndex) {
-        return remoteIndex >= lastIndex - 1 ? 0 : remoteIndex;
+        return remoteIndex >= lastIndex ? 0 : remoteIndex;
     }
 
 }

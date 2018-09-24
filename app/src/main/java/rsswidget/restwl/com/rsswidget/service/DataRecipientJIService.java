@@ -1,5 +1,6 @@
 package rsswidget.restwl.com.rsswidget.service;
 
+import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -9,14 +10,13 @@ import android.util.Log;
 
 import java.util.List;
 
-import rsswidget.restwl.com.rsswidget.database.DatabaseManager;
+import rsswidget.restwl.com.rsswidget.contentprovider.WidgetContentProvider;
 import rsswidget.restwl.com.rsswidget.model.News;
 import rsswidget.restwl.com.rsswidget.network.HttpConnector;
 import rsswidget.restwl.com.rsswidget.network.parsers.XmlParser;
 import rsswidget.restwl.com.rsswidget.utils.PreferencesManager;
 import rsswidget.restwl.com.rsswidget.widgedprovider.RssWidgetProvider;
 
-import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_UPDATE_WIDGET_DATA_AND_VIEW;
 import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.TAG;
 
 public class DataRecipientJIService extends JobIntentService {
@@ -30,16 +30,14 @@ public class DataRecipientJIService extends JobIntentService {
             stopSelf();
             return;
         }
-        try (HttpConnector connector = new HttpConnector(urlString);
-             DatabaseManager databaseManager = new DatabaseManager(getApplicationContext())) {
+        try (HttpConnector connector = new HttpConnector(urlString)) {
             connector.sendRequest();
             if (connector.getInputStreamServerError() == null) {
                 List<News> newsList = XmlParser.parseRssData(connector.getInputStreamContent());
-                databaseManager.deleteAllEntryFromNews();
-                databaseManager.insertEntriesInNews(newsList);
-                RssWidgetProvider.sendActionToAllWidgets(getApplicationContext(), ACTION_UPDATE_WIDGET_DATA_AND_VIEW);
+                WidgetContentProvider.insertAllNewsInNewsTable(getApplicationContext(), newsList);
+                RssWidgetProvider.sendActionToAllWidgets(getApplicationContext(), AppWidgetManager.ACTION_APPWIDGET_UPDATE);
             }
-            Log.d(TAG, "onStartCommand: News download and inserted");
+            Log.d(TAG, "DataRecipientJIService: News download and insert");
         } catch (Exception ex) {
             ex.printStackTrace();
         }

@@ -1,11 +1,23 @@
 package rsswidget.restwl.com.rsswidget.model;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
+import rsswidget.restwl.com.rsswidget.database.DatabaseManager;
+
+import static rsswidget.restwl.com.rsswidget.database.DatabaseManager.DESCRIPTION;
+import static rsswidget.restwl.com.rsswidget.database.DatabaseManager.LINK;
+import static rsswidget.restwl.com.rsswidget.database.DatabaseManager.PUB_DATE;
+import static rsswidget.restwl.com.rsswidget.database.DatabaseManager.TITLE;
+import static rsswidget.restwl.com.rsswidget.database.DatabaseManager._ID;
 import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.RSS_DATE_FORMAT;
 
 public class News {
@@ -80,4 +92,39 @@ public class News {
             return false;
         }
     }
+
+    public ContentValues forBlackListTable() {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DatabaseManager.NEWS_ID, getId());
+        return contentValues;
+    }
+
+    public ContentValues forNewsTable() {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DatabaseManager.TITLE, getTitle());
+        contentValues.put(DatabaseManager.DESCRIPTION, getDescription());
+        contentValues.put(DatabaseManager.PUB_DATE, getPubDate().getTime());
+        contentValues.put(DatabaseManager.LINK, getLink());
+        return contentValues;
+    }
+
+    public static List<News> parseNewsCursor(Cursor cursor) {
+        List<News> newsList = new ArrayList<>();
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                while (!cursor.isAfterLast()) {
+                    int id = cursor.getInt(cursor.getColumnIndex(_ID));
+                    String title = cursor.getString(cursor.getColumnIndex(TITLE));
+                    String description = cursor.getString(cursor.getColumnIndex(DESCRIPTION));
+                    String link = cursor.getString(cursor.getColumnIndex(LINK));
+                    long pubDate = cursor.getLong(cursor.getColumnIndex(PUB_DATE));
+                    newsList.add(new News(id, title, description, link, pubDate));
+                    cursor.moveToNext();
+                }
+                cursor.close();
+            }
+        }
+        return newsList;
+    }
+
 }

@@ -7,20 +7,19 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import rsswidget.restwl.com.rsswidget.R;
 import rsswidget.restwl.com.rsswidget.activities.SettingsActivity;
-import rsswidget.restwl.com.rsswidget.database.DatabaseManager;
+import rsswidget.restwl.com.rsswidget.contentprovider.WidgetContentProvider;
 import rsswidget.restwl.com.rsswidget.model.News;
 import rsswidget.restwl.com.rsswidget.receiver.WidgetTasksReceiver;
 import rsswidget.restwl.com.rsswidget.utils.HelperUtils;
@@ -28,20 +27,12 @@ import rsswidget.restwl.com.rsswidget.utils.IndexCalculator;
 import rsswidget.restwl.com.rsswidget.utils.PreferencesManager;
 import rsswidget.restwl.com.rsswidget.utils.WidgetConstants;
 
-import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_HIDE_NEWS;
-import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_OPEN_SETTINGS;
-import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_SHOW_NEXT;
-import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_SHOW_PREVIOUS;
-import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_START_SERVICE;
-import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.ACTION_UPDATE_WIDGET_DATA_AND_VIEW;
-import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.TAG;
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.*;
 
 public class RssWidgetProvider extends AppWidgetProvider {
 
     private static final long START_TIME_DELAY = TimeUnit.SECONDS.toMillis(5);
     private static final long REPEATING_TIME = TimeUnit.SECONDS.toMillis(60);
-
-    private static final List<News> newsList = new ArrayList<>();
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -91,24 +82,25 @@ public class RssWidgetProvider extends AppWidgetProvider {
                 getPendingIntent(context, appWidgetId, ACTION_SHOW_PREVIOUS + appWidgetId));
         remoteViews.setOnClickPendingIntent(R.id.button_next,
                 getPendingIntent(context, appWidgetId, ACTION_SHOW_NEXT + appWidgetId));
-        if (newsDataIsEmpty()) {
-            remoteViews.setTextViewText(R.id.tv_news_title, context.getString(R.string.widget_news_list_empty));
-            hideViews(remoteViews);
-            remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, null);
-        } else {
+
+        int index = PreferencesManager.extractNewsIndex(context, appWidgetId);
+        Cursor cursor = WidgetContentProvider.getAllFilteredNewsFromDatabase(context);
+        List<News> newsList = News.parseNewsCursor(cursor);
+
+        if (!newsList.isEmpty()) {
             showViews(remoteViews);
-
-            int index = PreferencesManager.extractNewsIndex(context, appWidgetId);
-            if (IndexCalculator.isOutOfRange(index, newsList.size() - 1))
-                index = 0;
-
             News news = newsList.get(index);
             String newsTitle = String.format(context.getString(R.string.placeholder_string_tab_number_text), index + 1, news.getTitle());
             remoteViews.setTextViewText(R.id.tv_news_title, newsTitle);
             remoteViews.setTextViewText(R.id.tv_news_description, news.getDescription());
             remoteViews.setTextViewText(R.id.tv_news_pub_date, HelperUtils.convertDateToRuLocal(news.getPubDate()));
             remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, getPendingIntentActionView(context, news.getLink()));
+        } else {
+            hideViews(remoteViews);
+            remoteViews.setTextViewText(R.id.tv_news_title, context.getString(R.string.widget_news_list_empty));
+            remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, null);
         }
+
         appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
     }
 
@@ -117,56 +109,45 @@ public class RssWidgetProvider extends AppWidgetProvider {
         if (intentAction == null) throw new IllegalArgumentException();
 
         int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+        Cursor cursor = WidgetContentProvider.getAllFilteredNewsFromDatabase(context);
+        List<News> newsList = News.parseNewsCursor(cursor);
 
-        if (intentAction.equals(WidgetConstants.ACTION_INITIAL_CONFIG) || intentAction.equals(WidgetConstants.ACTION_CUSTOM_CONFIG) ||
-                intentAction.equals(ACTION_UPDATE_WIDGET_DATA_AND_VIEW)) {
-            extractAndSetDataFromDatabase(context);
+        if (intentAction.equals(WidgetConstants.ACTION_INITIAL_CONFIG) || intentAction.equals(WidgetConstants.ACTION_CUSTOM_CONFIG)) {
+            sendActionToAllWidgets(context, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
         }
 
         if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
             if (intentAction.equals(ACTION_SHOW_PREVIOUS + appWidgetId) || intentAction.equals(ACTION_SHOW_NEXT + appWidgetId)) {
-                if (dataIsNotEmpty()) {
-                    handleNavigationAction(context, appWidgetId, intentAction);
+                if (newsList.isEmpty()) {
+
                 } else {
-                    extractAndSetDataFromDatabase(context);
+                    handleNavigationAction(context, appWidgetId, intentAction, newsList);
                 }
             }
 
             if (intentAction.equals(ACTION_HIDE_NEWS)) {
-                if (dataIsNotEmpty()) {
-                    handleHideAction(context, appWidgetId);
-                }
-                sendActionToAllWidgets(context, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                if (!newsList.isEmpty())
+                    handleHideAction(context, appWidgetId, newsList);
             }
         }
     }
 
-    private void handleHideAction(Context context, int appWidgetId) {
+    private void handleHideAction(Context context, int appWidgetId, List<News> newsList) {
         int currentIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
         int newIndex = IndexCalculator.nextIndexAfterRemote(currentIndex, newsList.size() - 1);
-        News news = newsList.remove(newIndex);
-        addNewsInBlackList(context, news);
+        News news = newsList.remove(currentIndex);
+        WidgetContentProvider.insertEntryInBlackListTable(context, news.forBlackListTable());
         ComponentName componentName = new ComponentName(context, RssWidgetProvider.class);
         int[] appWidgetIds = AppWidgetManager.getInstance(context).getAppWidgetIds(componentName);
         PreferencesManager.setIndexForAllWidgets(context, appWidgetIds, newIndex);
+        sendActionToAllWidgets(context, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
     }
 
-    private void handleNavigationAction(Context context, int appWidgetId, String action) {
+    private void handleNavigationAction(Context context, int appWidgetId, String action, List<News> newsList) {
         int oldIndex = PreferencesManager.extractNewsIndex(context, appWidgetId);
         int newIndex = IndexCalculator.getNewNavigationIndex(action, oldIndex, newsList.size() - 1);
         PreferencesManager.putNewsIndex(context, appWidgetId, newIndex);
         updateWidgetView(context, AppWidgetManager.getInstance(context), appWidgetId);
-    }
-
-    private void extractAndSetDataFromDatabase(Context context) {
-        try (DatabaseManager databaseManager = new DatabaseManager(context)) {
-            List<News> allNews = databaseManager.extractAllEntryFromNews();
-            List<News> blackListNews = databaseManager.extractAllEntryFromBlackList();
-            allNews.removeAll(blackListNews);
-            newsList.clear();
-            newsList.addAll(allNews);
-            sendActionToAllWidgets(context, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        }
     }
 
     private static PendingIntent getPendingIntent(Context context, int[] appWidgetIds, String action) {
@@ -212,15 +193,6 @@ public class RssWidgetProvider extends AppWidgetProvider {
         remoteViews.setViewVisibility(R.id.tv_news_pub_date, View.INVISIBLE);
     }
 
-    public static void addNewsInBlackList(Context context, News news) {
-        Runnable runnable = () -> {
-            try (DatabaseManager databaseManager = new DatabaseManager(context)) {
-                databaseManager.insertEntryInBlackList(news);
-            }
-        };
-        Executors.newSingleThreadExecutor().execute(runnable);
-    }
-
     public static void schedulePeriodicallyTasks(Context context) {
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, WidgetTasksReceiver.class);
@@ -235,14 +207,6 @@ public class RssWidgetProvider extends AppWidgetProvider {
         Intent intent = new Intent(context, WidgetTasksReceiver.class);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent, 0);
         am.cancel(pi);
-    }
-
-    private static boolean newsDataIsEmpty() {
-        return newsList.isEmpty();
-    }
-
-    private static boolean dataIsNotEmpty() {
-        return !newsDataIsEmpty();
     }
 
     public static void sendActionToAllWidgets(Context context, String intentAction) {

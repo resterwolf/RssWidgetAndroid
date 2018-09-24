@@ -1,29 +1,42 @@
 package rsswidget.restwl.com.rsswidget.database;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.util.Log;
 
 import java.io.Closeable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import rsswidget.restwl.com.rsswidget.model.News;
+
+import static rsswidget.restwl.com.rsswidget.utils.WidgetConstants.TAG;
 
 public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
 
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "RssWidget.db";
 
-    private static final String NEWS_TABLE_NAME = "NEWS_TABLE";
-    private static final String BLACK_LIST_TABLE_NAME = "BLACK_LIST_TABLE";
-    private static final String _ID = "id";
-    private static final String TITLE = "title";
-    private static final String DESCRIPTION = "description";
-    private static final String PUB_DATE = "pubDate";
-    private static final String LINK = "link";
+    public static final String NEWS_TABLE_NAME = "NEWS_TABLE";
+    public static final String SHORT_NEWS_TABLE_NAME = "NT";
+
+    public static final String BLACK_LIST_TABLE_NAME = "BLACK_LIST_TABLE";
+    public static final String SHORT_BLACK_LIST_TABLE_NAME = "BLT";
+
+    public static final String _ID = "id";
+    public static final String TITLE = "title";
+    public static final String DESCRIPTION = "description";
+    public static final String PUB_DATE = "pubDate";
+    public static final String LINK = "link";
+    public static final String NEWS_ID = "newsId";
 
     private static final String SQL_CREATE_NEWS_ENTRIES =
             "CREATE TABLE " + NEWS_TABLE_NAME + " (" +
@@ -36,10 +49,8 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
     private static final String SQL_CREATE_BLACK_LIST_ENTRIES =
             "CREATE TABLE " + BLACK_LIST_TABLE_NAME + " (" +
                     _ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                    TITLE + " TEXT," +
-                    DESCRIPTION + " TEXT," +
-                    PUB_DATE + " INTEGER," +
-                    LINK + " TEXT)";
+                    NEWS_ID + " INTEGER," +
+                    " FOREIGN KEY (" + NEWS_ID + ") REFERENCES " + NEWS_TABLE_NAME + "(" + _ID + ") ON DELETE CASCADE);";
 
     private static final String SQL_DELETE_NEWS_ENTRIES =
             "DROP TABLE IF EXISTS " + NEWS_TABLE_NAME;
@@ -66,93 +77,91 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
         onUpgrade(db, oldVersion, newVersion);
     }
 
-    public boolean insertEntryInNews(News news) {
-        SQLiteDatabase db = getWritableDatabase();
-
-        SQLiteStatement sqLiteStatement = db.compileStatement("insert into " + NEWS_TABLE_NAME +
-                " (" + TITLE + "," + DESCRIPTION + "," + PUB_DATE + "," + LINK + ") " +
-                "values (?,?,?,?);");
-        sqLiteStatement.bindString(1, news.getTitle());
-        sqLiteStatement.bindString(2, news.getDescription());
-        sqLiteStatement.bindLong(3, news.getPubDate().getTime());
-        sqLiteStatement.bindString(4, news.getLink());
-        return sqLiteStatement.executeInsert() != -1;
-    }
-
-    public void insertEntriesInNews(List<News> newsList) {
-        for (News news : newsList) {
-            insertEntryInNews(news);
-        }
-    }
-
-    public List<News> extractAllEntryFromNews() {
-        List<News> newsList = new ArrayList<>();
+    public Cursor queryNewsTable(@Nullable String[] projection, @Nullable String selection,
+                                 @Nullable String[] selectionArgs, @Nullable String sortOrder) {
         SQLiteDatabase db = getReadableDatabase();
-
-        Cursor cursor = db.rawQuery("select * from " + NEWS_TABLE_NAME, null);
-        if (cursor.moveToFirst()) {
-            while (!cursor.isAfterLast()) {
-                int id = cursor.getInt(cursor.getColumnIndex(_ID));
-                String title = cursor.getString(cursor.getColumnIndex(TITLE));
-                String description = cursor.getString(cursor.getColumnIndex(DESCRIPTION));
-                String link = cursor.getString(cursor.getColumnIndex(LINK));
-                long pubDate = cursor.getLong(cursor.getColumnIndex(PUB_DATE));
-
-                newsList.add(new News(id, title, description, link, pubDate));
-                cursor.moveToNext();
-            }
-            cursor.close();
-        }
-        return newsList;
+        return db.query(NEWS_TABLE_NAME, projection, selection,
+                selectionArgs, null, null, sortOrder);
     }
 
-    public void deleteAllEntryFromNews() {
-        SQLiteDatabase db = getWritableDatabase();
-        db.execSQL("DELETE FROM " + NEWS_TABLE_NAME);
-    }
-
-    public List<News> extractAllEntryFromBlackList() {
+    public Cursor queryBlackListTable(@Nullable String[] projection, @Nullable String selection,
+                                      @Nullable String[] selectionArgs, @Nullable String sortOrder) {
         SQLiteDatabase db = getReadableDatabase();
-        List<News> newsList = new ArrayList<>();
-
-        Cursor cursor = db.rawQuery("select * from " + BLACK_LIST_TABLE_NAME, null);
-        if (cursor.moveToFirst()) {
-            while (!cursor.isAfterLast()) {
-                int id = cursor.getInt(cursor.getColumnIndex(_ID));
-                String title = cursor.getString(cursor.getColumnIndex(TITLE));
-                String description = cursor.getString(cursor.getColumnIndex(DESCRIPTION));
-                String link = cursor.getString(cursor.getColumnIndex(LINK));
-                long pubDate = cursor.getLong(cursor.getColumnIndex(PUB_DATE));
-                newsList.add(new News(id, title, description, link, pubDate));
-                cursor.moveToNext();
-            }
-            cursor.close();
+        String sqlQuery = "select * from " + NEWS_TABLE_NAME + " as NT "
+                + "inner join " + BLACK_LIST_TABLE_NAME + " as BLT "
+                + "on NT." + _ID + " = BLT." + NEWS_ID;
+        if (selectionArgs != null) {
+            sqlQuery += " where NT." + _ID + " = ?";
         }
-        return newsList;
+        return db.rawQuery(sqlQuery, selectionArgs);
     }
 
-    public boolean insertEntryInBlackList(News news) {
+//    public long insertNewsTable(@Nullable ContentValues contentValues) {
+//        SQLiteDatabase db = getWritableDatabase();
+//        return db.insert(NEWS_TABLE_NAME, null, contentValues);
+//    }
+
+    public long insertNewsTable(@Nullable ContentValues contentValues) {
         SQLiteDatabase db = getWritableDatabase();
+        String title = contentValues.getAsString(TITLE);
+        String description = contentValues.getAsString(DESCRIPTION);
+        long pubDate = contentValues.getAsLong(PUB_DATE);
+        String link = contentValues.getAsString(LINK);
 
-        SQLiteStatement sqLiteStatement = db.compileStatement("insert into " + BLACK_LIST_TABLE_NAME +
-                " (" + TITLE + "," + DESCRIPTION + "," + PUB_DATE + "," + LINK + ") " +
-                "values (?,?,?,?);");
-        sqLiteStatement.bindString(1, news.getTitle());
-        sqLiteStatement.bindString(2, news.getDescription());
-        sqLiteStatement.bindLong(3, news.getPubDate().getTime());
-        sqLiteStatement.bindString(4, news.getLink());
-        return sqLiteStatement.executeInsert() != -1;
+//        String existingRow = "select count(*) from " + NEWS_TABLE_NAME + " where " + TITLE + " = " + title + " AND " +
+//                DESCRIPTION + " = " + description + " AND " +
+//                PUB_DATE + " = " + pubDate + " AND " +
+//                LINK + " = " + link;
+        String existEntrySqlQuery = "select * from " + NEWS_TABLE_NAME + " where " + TITLE + " = '" + title + "' AND " +
+                DESCRIPTION + " = '" + description + "' AND " +
+                PUB_DATE + " = '" + pubDate + "' AND " +
+                LINK + " = '" + link + "'";
+
+        Cursor entryExistCursor = db.rawQuery(existEntrySqlQuery, null);
+        if (entryExistCursor.getCount() == 0) {
+            return db.insert(NEWS_TABLE_NAME, null, contentValues);
+        }
+
+        entryExistCursor.moveToFirst();
+        return entryExistCursor.getLong(entryExistCursor.getColumnIndex(_ID));
     }
 
-    public boolean removeEntryFromBlackList(News news) {
+    public long insertBlackListTable(ContentValues contentValues) {
         SQLiteDatabase db = getWritableDatabase();
-        String selection = _ID + " = ?";
-        String[] selectionArgs = {String.valueOf(news.getId())};
-        return db.delete(BLACK_LIST_TABLE_NAME, selection, selectionArgs) > 0;
+        return db.insert(BLACK_LIST_TABLE_NAME, null, contentValues);
     }
 
-    public void clearAllEntryFromBlackList() {
+    public int deleteNewsTable(@Nullable String selection, @Nullable String[] selectionArgs) {
         SQLiteDatabase db = getWritableDatabase();
-        db.execSQL("DELETE FROM " + BLACK_LIST_TABLE_NAME);
+        return db.delete(NEWS_TABLE_NAME, selection, selectionArgs);
     }
+
+    public int deleteBlackListTable(@Nullable String selection, @Nullable String[] selectionArgs) {
+        SQLiteDatabase db = getWritableDatabase();
+        return db.delete(BLACK_LIST_TABLE_NAME, selection, selectionArgs);
+    }
+
+    public Cursor queryLeftInnerJoin(@Nullable String[] selectionArgs, @Nullable String sortOrder) {
+        SQLiteDatabase db = getReadableDatabase();
+        String sqlQuery = "select " + SHORT_NEWS_TABLE_NAME + "." + _ID + ", " +
+                SHORT_NEWS_TABLE_NAME + "." + TITLE + ", " +
+                SHORT_NEWS_TABLE_NAME + "." + DESCRIPTION + ", " +
+                SHORT_NEWS_TABLE_NAME + "." + PUB_DATE + ", " +
+                SHORT_NEWS_TABLE_NAME + "." + LINK + ", " +
+                SHORT_BLACK_LIST_TABLE_NAME + "." + NEWS_ID +
+                " from " + NEWS_TABLE_NAME + " as " + SHORT_NEWS_TABLE_NAME + " "
+                + "left join " + BLACK_LIST_TABLE_NAME + " as " + SHORT_BLACK_LIST_TABLE_NAME + " "
+                + "on " + SHORT_NEWS_TABLE_NAME + "." + _ID + " = " + SHORT_BLACK_LIST_TABLE_NAME + "." + NEWS_ID;
+
+        if (selectionArgs != null) {
+            sqlQuery += " where " + SHORT_NEWS_TABLE_NAME + "." + _ID + " = ?";
+        }
+        if (sortOrder != null) {
+            sqlQuery += " ORDER BY " + sortOrder;
+        }
+
+        Cursor cursor = db.rawQuery(sqlQuery, selectionArgs);
+        return cursor;
+    }
+
 }

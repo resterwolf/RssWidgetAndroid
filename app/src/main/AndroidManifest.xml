@@ -25,6 +25,10 @@
                 android:resource="@xml/rss_widget_info" />
         </receiver>
 
+        <provider
+            android:authorities="com.restwl.provider.RssWidget"
+            android:name=".contentprovider.WidgetContentProvider"/>
+
         <activity
             android:name=".activities.SettingsActivity"
             android:label="@string/settings_activity_actionbar_title"

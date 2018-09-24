@@ -17,7 +17,6 @@ public class WidgetConstants {
     public static final String ACTION_CUSTOM_CONFIG = "ACTION_CUSTOM_CONFIG";
     public static final String ACTION_SHOW_PREVIOUS = "ACTION_SHOW_PREVIOUS";
     public static final String ACTION_SHOW_NEXT = "ACTION_SHOW_NEXT";
-    public static final String ACTION_UPDATE_WIDGET_DATA_AND_VIEW = "ACTION_UPDATE_WIDGET_DATA_AND_VIEW";
     public static final String ACTION_START_SERVICE = "com.restw.rsswidget.START_SERVICE";
     public static final String ACTION_BOOT_COMPLETED = "android.intent.action.BOOT_COMPLETED";
     public static final String EXTRA_URL = "EXTRA_URL";
