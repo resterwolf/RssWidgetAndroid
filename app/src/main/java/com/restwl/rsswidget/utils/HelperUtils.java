@@ -32,6 +32,15 @@ public class HelperUtils {
         return formatter.format(date);
     }
 
+    public static boolean urlIsInvalid(String urlString) {
+        try {
+            URL url = new URL(urlString);
+            return false;
+        } catch (MalformedURLException ex) {
+            return true;
+        }
+    }
+
     public static boolean urlIsValid(String urlString) {
         try {
             URL url = new URL(urlString);
@@ -40,4 +49,5 @@ public class HelperUtils {
             return false;
         }
     }
+
 }

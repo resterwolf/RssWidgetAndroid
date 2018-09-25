@@ -12,6 +12,7 @@
 
     <string name="settings_activity_hint_rss_resource">Адрес ресурса</string>
     <string name="settings_activity_button_commit_title">Применить</string>
+    <string name="settings_activity_spinner_caption">Показывать новости за: (час)</string>
     <string name="settings_activity_button_clear_black_list_title"><u>Очистить все</u></string>
     <string name="settings_activity_rv_black_list_news">Список скрытых новостей:</string>
     <string name="settings_activity_invalid_format_url">Неверный формат URL</string>
@@ -23,6 +24,17 @@
 
     <string name="placeholder_string_tab_text">\t%s</string>
     <string name="placeholder_string_tab_number_text">\t%d. %s</string>
+
+    <string-array name="settings_spinner_housekeeper_time_hours">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>12</item>
+        <item>24</item>
+        <item>48</item>
+    </string-array>
 
     <string name="sample_pub_date">12 августа 2018</string>
     <string name="sample_title">\tТаксист высадил пассажирок посреди дороги за громкий разговор</string>

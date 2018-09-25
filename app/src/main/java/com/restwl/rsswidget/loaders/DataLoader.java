@@ -17,15 +17,15 @@ import com.restwl.rsswidget.utils.PreferencesManager;
 
 import static com.restwl.rsswidget.utils.WidgetConstants.EXTRA_URL;
 
-public class DataRecipientLoader extends AsyncTaskLoader<LoaderData> {
+public class DataLoader extends AsyncTaskLoader<LoaderData> {
 
     public static final int LOADER_ID = 1010;
 
     private String urlString;
-    private LoaderData.Status status = LoaderData.Status.Success;
+    private LoaderData.Status status = LoaderData.Status.Undefined;
     private List<News> newsList;
 
-    public DataRecipientLoader(Context context, Bundle args) {
+    public DataLoader(Context context, Bundle args) {
         super(context);
         if (args != null) {
             urlString = args.getString(EXTRA_URL);
@@ -55,7 +55,7 @@ public class DataRecipientLoader extends AsyncTaskLoader<LoaderData> {
                     newsList = XmlParser.parseRssData(connector.getInputStreamContent());
                     WidgetContentProvider.clearNewsTable(getContext());
                     WidgetContentProvider.insertAllNewsInNewsTable(getContext(), newsList);
-                    PreferencesManager.setRssChannelItemsCount(getContext(), newsList.size());
+                    WidgetContentProvider.executeHousekeeper(getContext());
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     status = LoaderData.Status.ResourceIsNotRssService;

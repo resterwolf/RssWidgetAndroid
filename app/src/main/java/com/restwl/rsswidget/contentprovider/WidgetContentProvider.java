@@ -11,14 +11,14 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
-import android.util.Log;
 
+import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.restwl.rsswidget.database.DatabaseManager;
 import com.restwl.rsswidget.model.News;
-
-import static com.restwl.rsswidget.utils.WidgetConstants.TAG;
+import com.restwl.rsswidget.utils.PreferencesManager;
 
 public class WidgetContentProvider extends ContentProvider {
 
@@ -29,7 +29,7 @@ public class WidgetContentProvider extends ContentProvider {
     private static final String NEWS_PATH = "news";
     private static final String BLACK_LIST_PATH = "blackList";
     private static final String FILTERED_NEWS_PATH = "filteredNews";
-    private static final String NEWS_HOUSEKEEPER_PATH = "newsHousekeeper";
+    private static final String HOUSEKEEPER_PATH = "newsHousekeeper";
 
     private static final Uri NEWS_CONTENT_URI = Uri.parse("content://"
             + AUTHORITY + "/" + NEWS_PATH);
@@ -37,8 +37,8 @@ public class WidgetContentProvider extends ContentProvider {
             + AUTHORITY + "/" + BLACK_LIST_PATH);
     private static final Uri FILTERED_NEWS_CONTENT_URI = Uri.parse("content://"
             + AUTHORITY + "/" + FILTERED_NEWS_PATH);
-    private static final Uri NEWS_HOUSEKEEPER_CONTENT_URI = Uri.parse("content://"
-            + AUTHORITY + "/" + NEWS_HOUSEKEEPER_PATH);
+    private static final Uri HOUSEKEEPER_CONTENT_URI = Uri.parse("content://"
+            + AUTHORITY + "/" + HOUSEKEEPER_PATH);
 
     private static final String NEWS_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
             + AUTHORITY + "." + NEWS_PATH;
@@ -52,10 +52,8 @@ public class WidgetContentProvider extends ContentProvider {
             + AUTHORITY + "." + FILTERED_NEWS_PATH;
     private static final String FILTERED_NEWS_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
             + AUTHORITY + "." + FILTERED_NEWS_PATH;
-    private static final String NEWS_HOUSEKEEPER_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
-            + AUTHORITY + "." + NEWS_HOUSEKEEPER_PATH;
-    private static final String NEWS_HOUSEKEEPER_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
-            + AUTHORITY + "." + NEWS_HOUSEKEEPER_PATH;
+    private static final String HOUSEKEEPER_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
+            + AUTHORITY + "." + HOUSEKEEPER_PATH;
 
     private static final int URI_NEWS = 100;
     private static final int URI_NEWS_ID = 101;
@@ -63,8 +61,7 @@ public class WidgetContentProvider extends ContentProvider {
     private static final int URI_BLACK_LIST_ID = 201;
     private static final int URI_FILTERED_NEWS = 300;
     private static final int URI_FILTERED_NEWS_ID = 301;
-    private static final int URI_NEWS_HOUSEKEEPER = 400;
-    private static final int URI_NEWS_HOUSEKEEPER_ID = 401;
+    private static final int URI_HOUSEKEEPER = 400;
 
     // описание и создание UriMatcher
     private static final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
@@ -76,8 +73,7 @@ public class WidgetContentProvider extends ContentProvider {
         uriMatcher.addURI(AUTHORITY, BLACK_LIST_PATH + "/#", URI_BLACK_LIST_ID);
         uriMatcher.addURI(AUTHORITY, FILTERED_NEWS_PATH, URI_FILTERED_NEWS);
         uriMatcher.addURI(AUTHORITY, FILTERED_NEWS_PATH + "/#", URI_FILTERED_NEWS_ID);
-        uriMatcher.addURI(AUTHORITY, NEWS_HOUSEKEEPER_PATH, URI_NEWS_HOUSEKEEPER);
-        uriMatcher.addURI(AUTHORITY, NEWS_HOUSEKEEPER_PATH + "/#", URI_NEWS_HOUSEKEEPER_ID);
+        uriMatcher.addURI(AUTHORITY, HOUSEKEEPER_PATH, URI_HOUSEKEEPER);
     }
 
     @Override
@@ -153,14 +149,10 @@ public class WidgetContentProvider extends ContentProvider {
                         FILTERED_NEWS_CONTENT_URI);
                 break;
 
-            case URI_NEWS_HOUSEKEEPER:
-                throw new UnsupportedOperationException();
-            case URI_NEWS_HOUSEKEEPER_ID:
+            case URI_HOUSEKEEPER:
                 throw new UnsupportedOperationException();
 
             default:
-                Log.d(TAG, "query: ");
-                Log.d(TAG, "uri id:");
                 throw new IllegalArgumentException("Wrong URI: " + uri);
         }
 
@@ -179,7 +171,7 @@ public class WidgetContentProvider extends ContentProvider {
             resultUri = ContentUris.withAppendedId(BLACK_LIST_CONTENT_URI, rowID);
         } else if (uriMatcher.match(uri) == URI_FILTERED_NEWS) {
             throw new UnsupportedOperationException();
-        } else if (uriMatcher.match(uri) == URI_NEWS_HOUSEKEEPER) {
+        } else if (uriMatcher.match(uri) == URI_HOUSEKEEPER) {
             throw new UnsupportedOperationException();
         } else {
             throw new IllegalArgumentException("Wrong URI: " + uri);
@@ -224,15 +216,8 @@ public class WidgetContentProvider extends ContentProvider {
             case URI_FILTERED_NEWS_ID:
                 throw new UnsupportedOperationException();
 
-            case URI_NEWS_HOUSEKEEPER:
-                throw new UnsupportedOperationException();
-            case URI_NEWS_HOUSEKEEPER_ID:
-                String offset = uri.getLastPathSegment();
-                if (TextUtils.isEmpty(offset)) {
-                    offset = String.valueOf(100);
-                }
-                databaseManager.deleteEntryByDateFromNewsTable(offset);
-                cnt = 0;
+            case URI_HOUSEKEEPER:
+                cnt = databaseManager.deleteNewsTable(selection, selectionArgs);
                 break;
 
             default:
@@ -263,10 +248,8 @@ public class WidgetContentProvider extends ContentProvider {
                 return FILTERED_NEWS_CONTENT_TYPE;
             case URI_FILTERED_NEWS_ID:
                 return FILTERED_NEWS_CONTENT_ITEM_TYPE;
-            case URI_NEWS_HOUSEKEEPER:
-                return NEWS_HOUSEKEEPER_CONTENT_TYPE;
-            case URI_NEWS_HOUSEKEEPER_ID:
-                return NEWS_HOUSEKEEPER_CONTENT_ITEM_TYPE;
+            case URI_HOUSEKEEPER:
+                return HOUSEKEEPER_CONTENT_TYPE;
         }
         return null;
     }
@@ -345,10 +328,14 @@ public class WidgetContentProvider extends ContentProvider {
         context.getContentResolver().bulkInsert(NEWS_CONTENT_URI, contentValues);
     }
 
-    // offset it's a saved rows after execute housekeeper
-    public static void executeHousekeeperNewsTable(Context context, int offset) {
-        Uri uri = Uri.parse("content://" + AUTHORITY + "/" + NEWS_HOUSEKEEPER_PATH + "/" + offset);
-        context.getContentResolver().delete(uri,null,null);
+    // Clear oldest data which public date less than CONSTANT hour;
+    public static void executeHousekeeper(Context context) {
+        String selection = DatabaseManager.PUB_DATE + " < ?";
+        long currentTime = Calendar.getInstance().getTimeInMillis();
+        int hours = PreferencesManager.getNewsActualPeriod(context);
+        long timeOffset = TimeUnit.HOURS.toMillis(hours);
+        String[] selectionArgs = new String[]{String.valueOf(currentTime - timeOffset)};
+        context.getContentResolver().delete(HOUSEKEEPER_CONTENT_URI, selection, selectionArgs);
     }
 
 }

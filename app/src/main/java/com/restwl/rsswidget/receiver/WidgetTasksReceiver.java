@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.restwl.rsswidget.service.DataRecipientJIService;
+import com.restwl.rsswidget.service.DataLoaderJIService;
 import com.restwl.rsswidget.widgedprovider.RssWidgetProvider;
 
 import static com.restwl.rsswidget.utils.WidgetConstants.*;
@@ -24,7 +24,7 @@ public class WidgetTasksReceiver extends BroadcastReceiver {
         // We don't need to care that Android might go to sleep mode, that's why we also don't need to use power manager,
         // JobIntentService will handle everything for us
         if (intent.getAction().equals(ACTION_START_SERVICE)) {
-            DataRecipientJIService.startService(context);
+            DataLoaderJIService.startService(context);
         }
     }
 

@@ -48,7 +48,7 @@
         </receiver>
 
         <service
-            android:name="com.restwl.rsswidget.service.DataRecipientJIService"
+            android:name="com.restwl.rsswidget.service.DataLoaderJIService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />

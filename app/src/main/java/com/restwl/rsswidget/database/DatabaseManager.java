@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.support.annotation.Nullable;
 
 import java.io.Closeable;
+import java.util.Date;
 
 public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
 
@@ -76,11 +77,11 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
     public Cursor queryBlackListTable(@Nullable String[] projection, @Nullable String selection,
                                       @Nullable String[] selectionArgs, @Nullable String sortOrder) {
         SQLiteDatabase db = getReadableDatabase();
-        String sqlQuery = "select * from " + NEWS_TABLE_NAME + " as NT "
-                + "inner join " + BLACK_LIST_TABLE_NAME + " as BLT "
-                + "on NT." + _ID + " = BLT." + NEWS_ID;
+        String sqlQuery = "select * from " + NEWS_TABLE_NAME + " as " + SHORT_NEWS_TABLE_NAME + " "
+                + "inner join " + BLACK_LIST_TABLE_NAME + " as " + SHORT_BLACK_LIST_TABLE_NAME + " "
+                + "on " + SHORT_NEWS_TABLE_NAME + "." + _ID + " = " + SHORT_BLACK_LIST_TABLE_NAME + "." + NEWS_ID;
         if (selectionArgs != null) {
-            sqlQuery += " where NT." + _ID + " = ?";
+            sqlQuery += " where " + SHORT_NEWS_TABLE_NAME + "." + _ID + " = ?";
         }
         return db.rawQuery(sqlQuery, selectionArgs);
     }
@@ -92,23 +93,32 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
 
     public long insertNewsTable(@Nullable ContentValues contentValues) {
         SQLiteDatabase db = getWritableDatabase();
+        long entryId = queryNewsEntryId(contentValues);
+        if (entryId != -1) {
+            return entryId;
+        } else {
+            return db.insert(NEWS_TABLE_NAME, null, contentValues);
+        }
+    }
+
+    private long queryNewsEntryId(ContentValues contentValues) {
+        SQLiteDatabase db = getReadableDatabase();
         String title = contentValues.getAsString(TITLE);
         String description = contentValues.getAsString(DESCRIPTION);
         long pubDate = contentValues.getAsLong(PUB_DATE);
         String link = contentValues.getAsString(LINK);
 
-        String existEntrySqlQuery = "select * from " + NEWS_TABLE_NAME + " where " + TITLE + " = '" + title + "' AND " +
-                DESCRIPTION + " = '" + description + "' AND " +
-                PUB_DATE + " = '" + pubDate + "' AND " +
-                LINK + " = '" + link + "'";
+        String selection = TITLE + " = ? AND " + DESCRIPTION + " = ? AND " + PUB_DATE + " = ? AND " + LINK + " = ?";
+        String[] selectionArgs = {title, description, String.valueOf(pubDate), link};
 
-        Cursor entryExistCursor = db.rawQuery(existEntrySqlQuery, null);
-        if (entryExistCursor.getCount() == 0) {
-            return db.insert(NEWS_TABLE_NAME, null, contentValues);
+        Cursor entryExistCursor = db.query(NEWS_TABLE_NAME, null, selection,
+                selectionArgs, null, null, null);
+
+        if (entryExistCursor.moveToFirst()) {
+            return entryExistCursor.getLong(entryExistCursor.getColumnIndex(_ID));
+        } else {
+            return -1;
         }
-
-        entryExistCursor.moveToFirst();
-        return entryExistCursor.getLong(entryExistCursor.getColumnIndex(_ID));
     }
 
     public long insertBlackListTable(ContentValues contentValues) {
@@ -119,14 +129,6 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
     public int deleteNewsTable(@Nullable String selection, @Nullable String[] selectionArgs) {
         SQLiteDatabase db = getWritableDatabase();
         return db.delete(NEWS_TABLE_NAME, selection, selectionArgs);
-    }
-
-    public void deleteEntryByDateFromNewsTable(String offset) {
-        SQLiteDatabase db = getWritableDatabase();
-        String sqlQuery = "DELETE FROM " + NEWS_TABLE_NAME + " WHERE " + PUB_DATE +
-                " IN (SELECT " + PUB_DATE + " FROM " + NEWS_TABLE_NAME + " ORDER BY " +
-                PUB_DATE + " DESC LIMIT -1 OFFSET " + offset + ");";
-        db.execSQL(sqlQuery);
     }
 
     public int deleteBlackListTable(@Nullable String selection, @Nullable String[] selectionArgs) {

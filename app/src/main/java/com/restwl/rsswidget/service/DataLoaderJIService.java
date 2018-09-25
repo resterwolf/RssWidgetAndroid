@@ -19,13 +19,13 @@ import com.restwl.rsswidget.widgedprovider.RssWidgetProvider;
 
 import static com.restwl.rsswidget.utils.WidgetConstants.TAG;
 
-public class DataRecipientJIService extends JobIntentService {
+public class DataLoaderJIService extends JobIntentService {
 
     public static final int JOB_ID = 1111;
 
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
-        String urlString = PreferencesManager.extractUrl(getApplicationContext());
+        String urlString = PreferencesManager.getRssResourceUrl(getApplicationContext());
         if (TextUtils.isEmpty(urlString)) {
             stopSelf();
             return;
@@ -35,15 +35,14 @@ public class DataRecipientJIService extends JobIntentService {
             if (connector.getInputStreamServerError() == null) {
                 List<News> newsList = XmlParser.parseRssData(connector.getInputStreamContent());
                 WidgetContentProvider.insertAllNewsInNewsTable(getApplicationContext(), newsList);
-                int rssChannelItemsCount = PreferencesManager.getRssChannelItemsCount(getApplicationContext());
-                WidgetContentProvider.executeHousekeeperNewsTable(getApplicationContext(), rssChannelItemsCount);
+                WidgetContentProvider.executeHousekeeper(getApplicationContext());
                 RssWidgetProvider.sendActionToAllWidgets(getApplicationContext(), AppWidgetManager.ACTION_APPWIDGET_UPDATE);
             } else {
-                Log.d(TAG, "DataRecipientJIService: News download failed. Server error");
+                Log.d(TAG, "DataLoaderJIService: News download failed. Server error");
             }
-            Log.d(TAG, "DataRecipientJIService: News download and insert");
+            Log.d(TAG, "DataLoaderJIService: News download and insert");
         } catch (Exception ex) {
-            Log.d(TAG, "DataRecipientJIService: News download failed. Network error");
+            Log.d(TAG, "DataLoaderJIService: News download failed. Network error");
             ex.printStackTrace();
         }
         stopSelf();
@@ -56,6 +55,6 @@ public class DataRecipientJIService extends JobIntentService {
 
     public static void startService(Context context) {
         Intent intent = new Intent();
-        JobIntentService.enqueueWork(context, DataRecipientJIService.class, JOB_ID, intent);
+        JobIntentService.enqueueWork(context, DataLoaderJIService.class, JOB_ID, intent);
     }
 }

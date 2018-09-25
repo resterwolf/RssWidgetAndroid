@@ -21,8 +21,11 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -31,7 +34,7 @@ import java.util.List;
 import com.restwl.rsswidget.R;
 import com.restwl.rsswidget.adapters.RVBlackListAdapter;
 import com.restwl.rsswidget.contentprovider.WidgetContentProvider;
-import com.restwl.rsswidget.loaders.DataRecipientLoader;
+import com.restwl.rsswidget.loaders.DataLoader;
 import com.restwl.rsswidget.model.LoaderData;
 import com.restwl.rsswidget.model.News;
 import com.restwl.rsswidget.utils.HelperUtils;
@@ -42,12 +45,14 @@ import static com.restwl.rsswidget.utils.WidgetConstants.ACTION_OPEN_SETTINGS;
 import static com.restwl.rsswidget.utils.WidgetConstants.EXTRA_URL;
 
 public class SettingsActivity extends AppCompatActivity implements RVBlackListAdapter.CellClickListener,
-        LoaderManager.LoaderCallbacks<LoaderData> {
+        LoaderManager.LoaderCallbacks<LoaderData>, Spinner.OnItemSelectedListener {
 
     private int mAppWidgetId;
     private List<News> newsList = new ArrayList<>();
     private ConfigurationFlag flag = ConfigurationFlag.Initial;
     private String prefUrlString;
+    private int prefActualNewsHours;
+    private boolean settingsHasChanged = false;
 
     // UI
     private TextInputEditText editTextUrl;
@@ -55,16 +60,32 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
     private ProgressBar progressBar;
     private RecyclerView rvBlackList;
     private TextInputLayout textInputUrlWrapper;
+    private Spinner housekeeperSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
         initActionBar();
+        handleIntentAndPreference();
         initViews();
-        handleIndent();
+        initSpinner();
         initRecyclerView();
-        fetchBlackListData();
+        setBlackListData();
+    }
+
+    private void initSpinner() {
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.settings_spinner_housekeeper_time_hours, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        housekeeperSpinner.setAdapter(adapter);
+
+        String[] spinnerItems = getResources().getStringArray(R.array.settings_spinner_housekeeper_time_hours);
+        for (int i = 0; i < spinnerItems.length; i++) {
+            if (TextUtils.equals(spinnerItems[i], String.valueOf(prefActualNewsHours))) {
+                housekeeperSpinner.setSelection(i);
+            }
+        }
     }
 
     @Override
@@ -104,7 +125,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
 
     private void onButtonCommitClick(View view) {
         hideKeyboard();
-        textInputUrlWrapper.setErrorEnabled(false);
+        textInputUrlWrapper.setError("");
         String newUrlString = editTextUrl.getText().toString().trim();
 
         if (TextUtils.isEmpty(newUrlString)) {
@@ -112,15 +133,21 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
             return;
         }
 
-        if (HelperUtils.urlIsValid(newUrlString)) {
-            if (TextUtils.equals(prefUrlString, newUrlString)) {
-                finishCurrentAndNotifyWidgets();
-                return;
-            }
+        if (HelperUtils.urlIsInvalid(newUrlString)) {
+            textInputUrlWrapper.setError(getString(R.string.settings_activity_invalid_format_url));
+            return;
+        }
+
+        if (!TextUtils.equals(prefUrlString, newUrlString)) {
+            settingsHasChanged = true;
+        }
+
+        if (settingsHasChanged) {
             executeNetLoader(newUrlString);
         } else {
-            textInputUrlWrapper.setError(getString(R.string.settings_activity_invalid_format_url));
+            finishCurrentAndNotifyWidgets();
         }
+
     }
 
     private void onButtonClearBlackListClick(View view) {
@@ -146,15 +173,17 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         buttonClearBlackList = findViewById(R.id.button_clear_black_list);
         textInputUrlWrapper = findViewById(R.id.textInputLayout);
         rvBlackList = findViewById(R.id.recycler_view_blocked_news_container);
+        housekeeperSpinner = findViewById(R.id.housekeeper_spinner);
+        housekeeperSpinner.setOnItemSelectedListener(this);
         buttonCommit.setOnClickListener(this::onButtonCommitClick);
         buttonClearBlackList.setOnClickListener(this::onButtonClearBlackListClick);
-        prefUrlString = PreferencesManager.extractUrl(this);
+
         if (!TextUtils.isEmpty(prefUrlString)) {
             editTextUrl.setText(prefUrlString);
         }
     }
 
-    private void handleIndent() {
+    private void handleIntentAndPreference() {
         Intent intent = getIntent();
         String intentAction = intent.getAction();
         if (intentAction == null) {
@@ -168,6 +197,9 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         if (intentAction.equals(ACTION_OPEN_SETTINGS)) {
             flag = ConfigurationFlag.Custom;
         }
+
+        prefUrlString = PreferencesManager.getRssResourceUrl(this);
+        prefActualNewsHours = PreferencesManager.getNewsActualPeriod(this);
     }
 
     private void initRecyclerView() {
@@ -176,7 +208,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
         rvBlackList.setHasFixedSize(true);
     }
 
-    private void fetchBlackListData() {
+    private void setBlackListData() {
         Cursor cursor = WidgetContentProvider.getAllEntryFromBlackListTable(this);
         this.newsList.clear();
         this.newsList.addAll(News.parseNewsCursor(cursor));
@@ -191,11 +223,11 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
     public void executeNetLoader(String urlString) {
         Bundle bundle = new Bundle();
         bundle.putString(EXTRA_URL, urlString);
-        Loader loader = getSupportLoaderManager().getLoader(DataRecipientLoader.LOADER_ID);
+        Loader loader = getSupportLoaderManager().getLoader(DataLoader.LOADER_ID);
         if (loader == null) {
-            getSupportLoaderManager().initLoader(DataRecipientLoader.LOADER_ID, bundle, this);
+            getSupportLoaderManager().initLoader(DataLoader.LOADER_ID, bundle, this);
         } else {
-            getSupportLoaderManager().restartLoader(DataRecipientLoader.LOADER_ID, bundle, this);
+            getSupportLoaderManager().restartLoader(DataLoader.LOADER_ID, bundle, this);
         }
     }
 
@@ -262,10 +294,10 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
     public Loader<LoaderData> onCreateLoader(int id, @Nullable Bundle args) {
         Loader<LoaderData> loader = null;
         switch (id) {
-            case DataRecipientLoader.LOADER_ID:
+            case DataLoader.LOADER_ID:
                 showProgress();
                 disableViewsState();
-                loader = new DataRecipientLoader(this, args);
+                loader = new DataLoader(this, args);
                 break;
             default:
                 throw new IllegalArgumentException();
@@ -277,12 +309,12 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
     public void onLoadFinished(@NonNull Loader<LoaderData> loader, LoaderData loaderData) {
         int loaderId = loader.getId();
         switch (loaderId) {
-            case DataRecipientLoader.LOADER_ID:
+            case DataLoader.LOADER_ID:
                 hideProgress();
                 enableViewsState();
                 if (loaderData == null) return;
                 if (loaderData.getStatus() == LoaderData.Status.Success) {
-                    PreferencesManager.putUrl(SettingsActivity.this, loaderData.getUrlString());
+                    PreferencesManager.setRssResourceUrl(SettingsActivity.this, loaderData.getUrlString());
                     finishCurrentAndNotifyWidgets();
                 } else {
                     handleLoaderDataStatus(loaderData.getStatus());
@@ -294,6 +326,22 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
 
     @Override
     public void onLoaderReset(@NonNull Loader<LoaderData> loader) {
+
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
+        int prefPeriod = PreferencesManager.getNewsActualPeriod(this);
+        String item = ((CharSequence) adapterView.getItemAtPosition(pos)).toString();
+        int period = Integer.parseInt(item);
+        if (prefPeriod != period) {
+            PreferencesManager.setNewsActualPeriod(this, period);
+            settingsHasChanged = true;
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
 
     }
 
