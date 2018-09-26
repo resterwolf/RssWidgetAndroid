@@ -34,7 +34,7 @@ public class DataLoaderJIService extends JobIntentService {
             connector.sendRequest();
             if (connector.getInputStreamServerError() == null) {
                 List<News> newsList = XmlParser.parseRssData(connector.getInputStreamContent());
-                WidgetContentProvider.insertAllNewsInNewsTable(getApplicationContext(), newsList);
+                WidgetContentProvider.insertNewsList(getApplicationContext(), newsList);
                 WidgetContentProvider.executeHousekeeper(getApplicationContext());
                 RssWidgetProvider.sendActionToAllWidgets(getApplicationContext(), AppWidgetManager.ACTION_APPWIDGET_UPDATE);
             } else {

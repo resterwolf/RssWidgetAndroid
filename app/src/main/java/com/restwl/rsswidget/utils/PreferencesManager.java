@@ -1,7 +1,11 @@
 package com.restwl.rsswidget.utils;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
+
+import com.restwl.rsswidget.widgedprovider.RssWidgetProvider;
 
 public class PreferencesManager {
 
@@ -39,6 +43,15 @@ public class PreferencesManager {
     public static void resetNewsIndex(Context context, int appWidgetId) {
         SharedPreferences preferences = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
         preferences.edit().putInt(NEWS_KEY + appWidgetId, 0).apply();
+    }
+
+    public static void resetNewsIndexForAllWidgets(Context context) {
+        AppWidgetManager appWidgetManager = ((AppWidgetManager) context.getSystemService(Context.APPWIDGET_SERVICE));
+        ComponentName componentName = new ComponentName(context, RssWidgetProvider.class);
+        int[] appWidgetId = appWidgetManager.getAppWidgetIds(componentName);
+        for (int id : appWidgetId) {
+            setIndexForWidget(context, id, 0);
+        }
     }
 
     public static void setIndexForAllWidgets(Context context, int[] appWidgetIds, int index) {

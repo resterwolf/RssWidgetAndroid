@@ -27,16 +27,16 @@ public class WidgetContentProvider extends ContentProvider {
     private static final String AUTHORITY = "com.restwl.provider.RssWidget";
 
     private static final String NEWS_PATH = "news";
-    private static final String BLACK_LIST_PATH = "blackList";
-    private static final String FILTERED_NEWS_PATH = "filteredNews";
+    private static final String BLOCK_NEWS_LIST_PATH = "blackListNews";
+    private static final String ACTUAL_NEWS_LIST_PATH = "actualListNews";
     private static final String HOUSEKEEPER_PATH = "newsHousekeeper";
 
     private static final Uri NEWS_CONTENT_URI = Uri.parse("content://"
             + AUTHORITY + "/" + NEWS_PATH);
-    private static final Uri BLACK_LIST_CONTENT_URI = Uri.parse("content://"
-            + AUTHORITY + "/" + BLACK_LIST_PATH);
-    private static final Uri FILTERED_NEWS_CONTENT_URI = Uri.parse("content://"
-            + AUTHORITY + "/" + FILTERED_NEWS_PATH);
+    private static final Uri BLOCK_NEWS_LIST_CONTENT_URI = Uri.parse("content://"
+            + AUTHORITY + "/" + BLOCK_NEWS_LIST_PATH);
+    private static final Uri ACTUAL_NEWS_LIST_CONTENT_URI = Uri.parse("content://"
+            + AUTHORITY + "/" + ACTUAL_NEWS_LIST_PATH);
     private static final Uri HOUSEKEEPER_CONTENT_URI = Uri.parse("content://"
             + AUTHORITY + "/" + HOUSEKEEPER_PATH);
 
@@ -44,23 +44,23 @@ public class WidgetContentProvider extends ContentProvider {
             + AUTHORITY + "." + NEWS_PATH;
     private static final String NEWS_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
             + AUTHORITY + "." + NEWS_PATH;
-    private static final String BLACK_LIST_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
-            + AUTHORITY + "." + BLACK_LIST_PATH;
-    private static final String BLACK_LIST_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
-            + AUTHORITY + "." + BLACK_LIST_PATH;
-    private static final String FILTERED_NEWS_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
-            + AUTHORITY + "." + FILTERED_NEWS_PATH;
-    private static final String FILTERED_NEWS_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
-            + AUTHORITY + "." + FILTERED_NEWS_PATH;
+    private static final String BLOCK_NEWS_LIST_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
+            + AUTHORITY + "." + BLOCK_NEWS_LIST_PATH;
+    private static final String BLOCK_NEWS_LIST_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
+            + AUTHORITY + "." + BLOCK_NEWS_LIST_PATH;
+    private static final String ACTUAL_NEWS_LIST_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
+            + AUTHORITY + "." + ACTUAL_NEWS_LIST_PATH;
+    private static final String ACTUAL_NEWS_LIST_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd."
+            + AUTHORITY + "." + ACTUAL_NEWS_LIST_PATH;
     private static final String HOUSEKEEPER_CONTENT_TYPE = "vnd.android.cursor.dir/vnd."
             + AUTHORITY + "." + HOUSEKEEPER_PATH;
 
     private static final int URI_NEWS = 100;
     private static final int URI_NEWS_ID = 101;
-    private static final int URI_BLACK_LIST = 200;
-    private static final int URI_BLACK_LIST_ID = 201;
-    private static final int URI_FILTERED_NEWS = 300;
-    private static final int URI_FILTERED_NEWS_ID = 301;
+    private static final int URI_BLOCK_NEWS_LIST = 200;
+    private static final int URI_BLOCK_NEWS_LIST_ID = 201;
+    private static final int URI_ACTUAL_NEWS_LIST = 300;
+    private static final int URI_ACTUAL_NEWS_LIST_ID = 301;
     private static final int URI_HOUSEKEEPER = 400;
 
     // описание и создание UriMatcher
@@ -69,10 +69,10 @@ public class WidgetContentProvider extends ContentProvider {
     static {
         uriMatcher.addURI(AUTHORITY, NEWS_PATH, URI_NEWS);
         uriMatcher.addURI(AUTHORITY, NEWS_PATH + "/#", URI_NEWS_ID);
-        uriMatcher.addURI(AUTHORITY, BLACK_LIST_PATH, URI_BLACK_LIST);
-        uriMatcher.addURI(AUTHORITY, BLACK_LIST_PATH + "/#", URI_BLACK_LIST_ID);
-        uriMatcher.addURI(AUTHORITY, FILTERED_NEWS_PATH, URI_FILTERED_NEWS);
-        uriMatcher.addURI(AUTHORITY, FILTERED_NEWS_PATH + "/#", URI_FILTERED_NEWS_ID);
+        uriMatcher.addURI(AUTHORITY, BLOCK_NEWS_LIST_PATH, URI_BLOCK_NEWS_LIST);
+        uriMatcher.addURI(AUTHORITY, BLOCK_NEWS_LIST_PATH + "/#", URI_BLOCK_NEWS_LIST_ID);
+        uriMatcher.addURI(AUTHORITY, ACTUAL_NEWS_LIST_PATH, URI_ACTUAL_NEWS_LIST);
+        uriMatcher.addURI(AUTHORITY, ACTUAL_NEWS_LIST_PATH + "/#", URI_ACTUAL_NEWS_LIST_ID);
         uriMatcher.addURI(AUTHORITY, HOUSEKEEPER_PATH, URI_HOUSEKEEPER);
     }
 
@@ -111,14 +111,14 @@ public class WidgetContentProvider extends ContentProvider {
                         NEWS_CONTENT_URI);
                 break;
 
-            case URI_BLACK_LIST:
+            case URI_BLOCK_NEWS_LIST:
                 cursor = databaseManager.queryBlackListTable(projection, selection,
                         selectionArgs, sortOrder);
                 cursor.setNotificationUri(getContext().getContentResolver(),
-                        BLACK_LIST_CONTENT_URI);
+                        BLOCK_NEWS_LIST_CONTENT_URI);
                 break;
 
-            case URI_BLACK_LIST_ID:
+            case URI_BLOCK_NEWS_LIST_ID:
                 String blackListItemId = uri.getLastPathSegment();
                 if (TextUtils.isEmpty(selection)) {
                     selection = DatabaseManager._ID + " = " + blackListItemId;
@@ -128,25 +128,25 @@ public class WidgetContentProvider extends ContentProvider {
                 cursor = databaseManager.queryBlackListTable(projection, selection,
                         selectionArgs, sortOrder);
                 cursor.setNotificationUri(getContext().getContentResolver(),
-                        BLACK_LIST_CONTENT_URI);
+                        BLOCK_NEWS_LIST_CONTENT_URI);
                 break;
 
-            case URI_FILTERED_NEWS:
+            case URI_ACTUAL_NEWS_LIST:
                 if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = DatabaseManager.SHORT_NEWS_TABLE_NAME + "." + DatabaseManager.PUB_DATE + " DESC";
                 }
-                cursor = getNoBlockedEntry(databaseManager.queryLeftInnerJoin(selectionArgs, sortOrder));
+                cursor = filterActualNewsList(databaseManager.queryLeftInnerJoin(selectionArgs, sortOrder));
                 cursor.setNotificationUri(getContext().getContentResolver(),
-                        FILTERED_NEWS_CONTENT_URI);
+                        ACTUAL_NEWS_LIST_CONTENT_URI);
                 break;
 
-            case URI_FILTERED_NEWS_ID:
+            case URI_ACTUAL_NEWS_LIST_ID:
                 if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = DatabaseManager.SHORT_NEWS_TABLE_NAME + "." + DatabaseManager.PUB_DATE + " DESC";
                 }
-                cursor = getNoBlockedEntry(databaseManager.queryLeftInnerJoin(selectionArgs, sortOrder));
+                cursor = filterActualNewsList(databaseManager.queryLeftInnerJoin(selectionArgs, sortOrder));
                 cursor.setNotificationUri(getContext().getContentResolver(),
-                        FILTERED_NEWS_CONTENT_URI);
+                        ACTUAL_NEWS_LIST_CONTENT_URI);
                 break;
 
             case URI_HOUSEKEEPER:
@@ -166,10 +166,10 @@ public class WidgetContentProvider extends ContentProvider {
         if (uriMatcher.match(uri) == URI_NEWS) {
             long rowID = databaseManager.insertNewsTable(contentValues);
             resultUri = ContentUris.withAppendedId(NEWS_CONTENT_URI, rowID);
-        } else if (uriMatcher.match(uri) == URI_BLACK_LIST) {
+        } else if (uriMatcher.match(uri) == URI_BLOCK_NEWS_LIST) {
             long rowID = databaseManager.insertBlackListTable(contentValues);
-            resultUri = ContentUris.withAppendedId(BLACK_LIST_CONTENT_URI, rowID);
-        } else if (uriMatcher.match(uri) == URI_FILTERED_NEWS) {
+            resultUri = ContentUris.withAppendedId(BLOCK_NEWS_LIST_CONTENT_URI, rowID);
+        } else if (uriMatcher.match(uri) == URI_ACTUAL_NEWS_LIST) {
             throw new UnsupportedOperationException();
         } else if (uriMatcher.match(uri) == URI_HOUSEKEEPER) {
             throw new UnsupportedOperationException();
@@ -197,10 +197,10 @@ public class WidgetContentProvider extends ContentProvider {
                 cnt = databaseManager.deleteNewsTable(selection, selectionArgs);
                 break;
 
-            case URI_BLACK_LIST:
+            case URI_BLOCK_NEWS_LIST:
                 cnt = databaseManager.deleteBlackListTable(selection, selectionArgs);
                 break;
-            case URI_BLACK_LIST_ID:
+            case URI_BLOCK_NEWS_LIST_ID:
                 String blackListItemId = uri.getLastPathSegment();
                 if (TextUtils.isEmpty(selection)) {
                     selection = DatabaseManager._ID + " = " + blackListItemId;
@@ -210,10 +210,10 @@ public class WidgetContentProvider extends ContentProvider {
                 cnt = databaseManager.deleteBlackListTable(selection, selectionArgs);
                 break;
 
-            case URI_FILTERED_NEWS:
+            case URI_ACTUAL_NEWS_LIST:
                 throw new UnsupportedOperationException();
 
-            case URI_FILTERED_NEWS_ID:
+            case URI_ACTUAL_NEWS_LIST_ID:
                 throw new UnsupportedOperationException();
 
             case URI_HOUSEKEEPER:
@@ -240,87 +240,87 @@ public class WidgetContentProvider extends ContentProvider {
                 return NEWS_CONTENT_TYPE;
             case URI_NEWS_ID:
                 return NEWS_CONTENT_ITEM_TYPE;
-            case URI_BLACK_LIST:
-                return BLACK_LIST_CONTENT_TYPE;
-            case URI_BLACK_LIST_ID:
-                return BLACK_LIST_CONTENT_ITEM_TYPE;
-            case URI_FILTERED_NEWS:
-                return FILTERED_NEWS_CONTENT_TYPE;
-            case URI_FILTERED_NEWS_ID:
-                return FILTERED_NEWS_CONTENT_ITEM_TYPE;
+            case URI_BLOCK_NEWS_LIST:
+                return BLOCK_NEWS_LIST_CONTENT_TYPE;
+            case URI_BLOCK_NEWS_LIST_ID:
+                return BLOCK_NEWS_LIST_CONTENT_ITEM_TYPE;
+            case URI_ACTUAL_NEWS_LIST:
+                return ACTUAL_NEWS_LIST_CONTENT_TYPE;
+            case URI_ACTUAL_NEWS_LIST_ID:
+                return ACTUAL_NEWS_LIST_CONTENT_ITEM_TYPE;
             case URI_HOUSEKEEPER:
                 return HOUSEKEEPER_CONTENT_TYPE;
         }
         return null;
     }
 
-    private Cursor getNoBlockedEntry(Cursor cursor) {
+    private Cursor filterActualNewsList(Cursor blockNewsListCursor) {
         String[] columnNames = {DatabaseManager._ID, DatabaseManager.TITLE,
                 DatabaseManager.DESCRIPTION, DatabaseManager.PUB_DATE, DatabaseManager.LINK};
         MatrixCursor matrixCursor = new MatrixCursor(columnNames);
-        if (cursor.moveToFirst()) {
-            while (!cursor.isAfterLast()) {
-                int id = cursor.getInt(cursor.getColumnIndex(DatabaseManager._ID));
-                String title = cursor.getString(cursor.getColumnIndex(DatabaseManager.TITLE));
-                String description = cursor.getString(cursor.getColumnIndex(DatabaseManager.DESCRIPTION));
-                String link = cursor.getString(cursor.getColumnIndex(DatabaseManager.LINK));
-                long pubDate = cursor.getLong(cursor.getColumnIndex(DatabaseManager.PUB_DATE));
-                if (cursor.isNull(cursor.getColumnIndex(DatabaseManager.NEWS_ID))) {
+        if (blockNewsListCursor.moveToFirst()) {
+            while (!blockNewsListCursor.isAfterLast()) {
+                int id = blockNewsListCursor.getInt(blockNewsListCursor.getColumnIndex(DatabaseManager._ID));
+                String title = blockNewsListCursor.getString(blockNewsListCursor.getColumnIndex(DatabaseManager.TITLE));
+                String description = blockNewsListCursor.getString(blockNewsListCursor.getColumnIndex(DatabaseManager.DESCRIPTION));
+                String link = blockNewsListCursor.getString(blockNewsListCursor.getColumnIndex(DatabaseManager.LINK));
+                long pubDate = blockNewsListCursor.getLong(blockNewsListCursor.getColumnIndex(DatabaseManager.PUB_DATE));
+                if (blockNewsListCursor.isNull(blockNewsListCursor.getColumnIndex(DatabaseManager.NEWS_ID))) {
                     matrixCursor.newRow().add(DatabaseManager._ID, id)
                             .add(DatabaseManager.TITLE, title)
                             .add(DatabaseManager.DESCRIPTION, description)
                             .add(DatabaseManager.PUB_DATE, pubDate)
                             .add(DatabaseManager.LINK, link);
                 }
-                cursor.moveToNext();
+                blockNewsListCursor.moveToNext();
             }
-            cursor.close();
+            blockNewsListCursor.close();
         }
         return matrixCursor;
     }
 
     // Public methods
 
-    public static Cursor getAllEntryFromTableNews(Context context) {
+    public static Cursor queryAllNews(Context context) {
         return context.getContentResolver().query(NEWS_CONTENT_URI, null, null, null, null);
     }
 
-    public static Cursor getEntryFromTableNews(Context context, int id) {
+    public static Cursor querySingleNews(Context context, int id) {
         Uri uriId = Uri.parse("content://" + WidgetContentProvider.AUTHORITY + "/" + WidgetContentProvider.NEWS_PATH + "/" + id);
         return context.getContentResolver().query(uriId, null, null, null, null);
     }
 
-    public static void insertEntryInBlackListTable(Context context, ContentValues values) {
-        context.getContentResolver().insert(BLACK_LIST_CONTENT_URI, values);
+    public static void insertEntryInBlockNewsList(Context context, ContentValues values) {
+        context.getContentResolver().insert(BLOCK_NEWS_LIST_CONTENT_URI, values);
     }
 
     public static void insertEntryInNewsTable(Context context, ContentValues values) {
         context.getContentResolver().insert(NEWS_CONTENT_URI, values);
     }
 
-    public static Cursor getAllFilteredNewsFromDatabase(Context context) {
-        Cursor cursor = context.getContentResolver().query(FILTERED_NEWS_CONTENT_URI, null, null, null, null);
+    public static Cursor queryAllActualNewsList(Context context) {
+        Cursor cursor = context.getContentResolver().query(ACTUAL_NEWS_LIST_CONTENT_URI, null, null, null, null);
         return cursor;
     }
 
-    public static Cursor getAllEntryFromBlackListTable(Context context) {
-        return context.getContentResolver().query(BLACK_LIST_CONTENT_URI, null, null, null, null);
+    public static Cursor queryAllBlockNewsList(Context context) {
+        return context.getContentResolver().query(BLOCK_NEWS_LIST_CONTENT_URI, null, null, null, null);
     }
 
-    public static void clearNewsTable(Context context) {
+    public static void clearNews(Context context) {
         context.getContentResolver().delete(NEWS_CONTENT_URI, null, null);
     }
 
-    public static void clearBlackListTable(Context context) {
-        context.getContentResolver().delete(BLACK_LIST_CONTENT_URI, null, null);
+    public static void clearBlockNewsList(Context context) {
+        context.getContentResolver().delete(BLOCK_NEWS_LIST_CONTENT_URI, null, null);
     }
 
-    public static void deleteEntryBlackListTable(Context context, int newsId) {
-        Uri uri = Uri.parse("content://" + AUTHORITY + "/" + BLACK_LIST_PATH + "/" + newsId);
+    public static void deleteBlockNews(Context context, int newsId) {
+        Uri uri = Uri.parse("content://" + AUTHORITY + "/" + BLOCK_NEWS_LIST_PATH + "/" + newsId);
         context.getContentResolver().delete(uri, null, null);
     }
 
-    public static void insertAllNewsInNewsTable(Context context, List<News> newsList) {
+    public static void insertNewsList(Context context, List<News> newsList) {
         ContentValues[] contentValues = new ContentValues[newsList.size()];
         for (int i = 0; i < newsList.size(); i++) {
             contentValues[i] = newsList.get(i).forNewsTable();

@@ -53,8 +53,9 @@ public class DataLoader extends AsyncTaskLoader<LoaderData> {
                 status = LoaderData.Status.Success;
                 try {
                     newsList = XmlParser.parseRssData(connector.getInputStreamContent());
-                    WidgetContentProvider.clearNewsTable(getContext());
-                    WidgetContentProvider.insertAllNewsInNewsTable(getContext(), newsList);
+                    WidgetContentProvider.clearNews(getContext());
+                    PreferencesManager.resetNewsIndexForAllWidgets(getContext());
+                    WidgetContentProvider.insertNewsList(getContext(), newsList);
                     WidgetContentProvider.executeHousekeeper(getContext());
                 } catch (Exception ex) {
                     ex.printStackTrace();

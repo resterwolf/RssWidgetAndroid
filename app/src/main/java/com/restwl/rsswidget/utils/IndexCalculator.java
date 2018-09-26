@@ -7,32 +7,22 @@ public class IndexCalculator {
         throw new AssertionError();
     }
 
-    public static boolean isNotOutOfRange(int index, int lastIndex) {
-        return index >= 0 && index <= lastIndex;
+    public static int getDisplayNextIndex(int index, int lastIndex) {
+        return index == lastIndex ? 0 : ++index;
     }
 
-    public static boolean isOutOfRange(int index, int lastIndex) {
-        return index < 0 && index > lastIndex;
-    }
-
-    public static int getNextPresentIndex(int oldIndex, int lastIndex) {
-        return oldIndex == lastIndex ? 0 : ++oldIndex;
-    }
-
-    public static int getPreviousPresentIndex(int index, int lastIndex) {
+    public static int getDisplayPreviousIndex(int index, int lastIndex) {
         return index == 0 ? lastIndex : --index;
     }
 
-    public static int getNewNavigationIndex(String action, int oldIndex, int lastIndex) {
-        if (action.contains(WidgetConstants.ACTION_SHOW_PREVIOUS)) {
-            return getPreviousPresentIndex(oldIndex, lastIndex);
+    public static int getDisplayIndexAfterRemote(int remoteIndex, int lastIndex) {
+        if (remoteIndex <= 0) {
+            return 0;
+        } else if (remoteIndex >= lastIndex) {
+            return lastIndex - 1;
         } else {
-            return getNextPresentIndex(oldIndex, lastIndex);
+            return remoteIndex;
         }
-    }
-
-    public static int nextIndexAfterRemote(int remoteIndex, int lastIndex) {
-        return remoteIndex >= lastIndex ? 0 : remoteIndex;
     }
 
 }

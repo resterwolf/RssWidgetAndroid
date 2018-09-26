@@ -112,7 +112,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
 
     @Override
     public void onHideButtonClick(View view, News news, int index) {
-        WidgetContentProvider.deleteEntryBlackListTable(this, news.getId());
+        WidgetContentProvider.deleteBlockNews(this, news.getId());
         newsList.remove(news);
         rvBlackList.getAdapter().notifyDataSetChanged();
         RssWidgetProvider.sendActionToAllWidgets(this, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
@@ -152,7 +152,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
 
     private void onButtonClearBlackListClick(View view) {
         if (newsList.isEmpty()) return;
-        WidgetContentProvider.clearBlackListTable(this);
+        WidgetContentProvider.clearBlockNewsList(this);
         newsList.clear();
         rvBlackList.getAdapter().notifyDataSetChanged();
         RssWidgetProvider.sendActionToAllWidgets(this, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
@@ -209,7 +209,7 @@ public class SettingsActivity extends AppCompatActivity implements RVBlackListAd
     }
 
     private void setBlackListData() {
-        Cursor cursor = WidgetContentProvider.getAllEntryFromBlackListTable(this);
+        Cursor cursor = WidgetContentProvider.queryAllBlockNewsList(this);
         this.newsList.clear();
         this.newsList.addAll(News.parseNewsCursor(cursor));
         if (rvBlackList.getAdapter() == null) {

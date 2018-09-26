@@ -83,7 +83,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
                 getPendingIntent(context, appWidgetId, ACTION_SHOW_NEXT + appWidgetId));
 
         int index = PreferencesManager.getNewsIndex(context, appWidgetId);
-        Cursor cursor = WidgetContentProvider.getAllFilteredNewsFromDatabase(context);
+        Cursor cursor = WidgetContentProvider.queryAllActualNewsList(context);
         List<News> newsList = News.parseNewsCursor(cursor);
 
         if (!newsList.isEmpty()) {
@@ -108,37 +108,49 @@ public class RssWidgetProvider extends AppWidgetProvider {
         if (intentAction == null) throw new IllegalArgumentException();
 
         int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
-        Cursor cursor = WidgetContentProvider.getAllFilteredNewsFromDatabase(context);
-        List<News> newsList = News.parseNewsCursor(cursor);
-
-        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID || newsList.isEmpty()) {
+        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             return;
         }
 
-        if (intentAction.equals(ACTION_SHOW_PREVIOUS + appWidgetId) || intentAction.equals(ACTION_SHOW_NEXT + appWidgetId)) {
-            handleNavigationAction(context, appWidgetId, intentAction, newsList);
+        Cursor cursor = WidgetContentProvider.queryAllActualNewsList(context);
+        List<News> newsList = News.parseNewsCursor(cursor);
+
+        if (!newsList.isEmpty()) {
+            int currentDisplayedIndex = PreferencesManager.getNewsIndex(context, appWidgetId);
+            int previousIndex = IndexCalculator.getDisplayPreviousIndex(currentDisplayedIndex, newsList.size() - 1);
+            int nextIndex = IndexCalculator.getDisplayNextIndex(currentDisplayedIndex, newsList.size() - 1);
+
+            if (intentAction.equals(ACTION_SHOW_PREVIOUS + appWidgetId) || intentAction.equals(ACTION_SHOW_NEXT + appWidgetId)) {
+                handleNavigationAction(context, appWidgetId, previousIndex);
+            }
+
+            if (intentAction.equals(ACTION_SHOW_NEXT + appWidgetId)) {
+                handleNavigationAction(context, appWidgetId, nextIndex);
+            }
+
+            if (intentAction.equals(ACTION_HIDE_NEWS)) {
+                int displayIndex = IndexCalculator.getDisplayIndexAfterRemote(currentDisplayedIndex, newsList.size() - 1);
+                handleHideAction(context, newsList, currentDisplayedIndex, displayIndex);
+            }
+
+        } else {
+            PreferencesManager.resetNewsIndex(context, appWidgetId);
         }
-        if (intentAction.equals(ACTION_HIDE_NEWS)) {
-            handleHideAction(context, appWidgetId, newsList);
-        }
+
+
     }
 
-    private void handleHideAction(Context context, int appWidgetId, List<News> newsList) {
-        int currentIndex = PreferencesManager.getNewsIndex(context, appWidgetId);
-        int newIndex = IndexCalculator.nextIndexAfterRemote(currentIndex, newsList.size() - 1);
-        News news = newsList.remove(currentIndex);
-        WidgetContentProvider.insertEntryInBlackListTable(context, news.forBlackListTable());
+    private void handleHideAction(Context context, List<News> newsList, int hiddenObjectIndex, int displayIndex) {
+        News news = newsList.remove(hiddenObjectIndex);
+        WidgetContentProvider.insertEntryInBlockNewsList(context, news.forBlackListTable());
         ComponentName componentName = new ComponentName(context, RssWidgetProvider.class);
         int[] appWidgetIds = AppWidgetManager.getInstance(context).getAppWidgetIds(componentName);
-        PreferencesManager.setIndexForAllWidgets(context, appWidgetIds, newIndex);
+        PreferencesManager.setIndexForAllWidgets(context, appWidgetIds, displayIndex);
         sendActionToAllWidgets(context, AppWidgetManager.ACTION_APPWIDGET_UPDATE);
     }
 
-    private void handleNavigationAction(Context context, int appWidgetId, String
-            action, List<News> newsList) {
-        int oldIndex = PreferencesManager.getNewsIndex(context, appWidgetId);
-        int newIndex = IndexCalculator.getNewNavigationIndex(action, oldIndex, newsList.size() - 1);
-        PreferencesManager.setIndexForWidget(context, appWidgetId, newIndex);
+    private void handleNavigationAction(Context context, int appWidgetId, int displayedIndex) {
+        PreferencesManager.setIndexForWidget(context, appWidgetId, displayedIndex);
         updateWidgetView(context, AppWidgetManager.getInstance(context), appWidgetId);
     }
 

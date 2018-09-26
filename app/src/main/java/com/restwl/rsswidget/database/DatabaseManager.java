@@ -34,7 +34,11 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
                     TITLE + " TEXT," +
                     DESCRIPTION + " TEXT," +
                     PUB_DATE + " INTEGER," +
-                    LINK + " TEXT)";
+                    LINK + " TEXT, " +
+                    "UNIQUE (" + TITLE + " COLLATE NOCASE," +
+                    DESCRIPTION + " COLLATE NOCASE," +
+                    PUB_DATE + "," +
+                    LINK + " COLLATE NOCASE) ON CONFLICT IGNORE);";
 
     private static final String SQL_CREATE_BLACK_LIST_ENTRIES =
             "CREATE TABLE " + BLACK_LIST_TABLE_NAME + " (" +
@@ -86,39 +90,9 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
         return db.rawQuery(sqlQuery, selectionArgs);
     }
 
-//    public long insertNewsTable(@Nullable ContentValues contentValues) {
-//        SQLiteDatabase db = getWritableDatabase();
-//        return db.insert(NEWS_TABLE_NAME, null, contentValues);
-//    }
-
     public long insertNewsTable(@Nullable ContentValues contentValues) {
         SQLiteDatabase db = getWritableDatabase();
-        long entryId = queryNewsEntryId(contentValues);
-        if (entryId != -1) {
-            return entryId;
-        } else {
-            return db.insert(NEWS_TABLE_NAME, null, contentValues);
-        }
-    }
-
-    private long queryNewsEntryId(ContentValues contentValues) {
-        SQLiteDatabase db = getReadableDatabase();
-        String title = contentValues.getAsString(TITLE);
-        String description = contentValues.getAsString(DESCRIPTION);
-        long pubDate = contentValues.getAsLong(PUB_DATE);
-        String link = contentValues.getAsString(LINK);
-
-        String selection = TITLE + " = ? AND " + DESCRIPTION + " = ? AND " + PUB_DATE + " = ? AND " + LINK + " = ?";
-        String[] selectionArgs = {title, description, String.valueOf(pubDate), link};
-
-        Cursor entryExistCursor = db.query(NEWS_TABLE_NAME, null, selection,
-                selectionArgs, null, null, null);
-
-        if (entryExistCursor.moveToFirst()) {
-            return entryExistCursor.getLong(entryExistCursor.getColumnIndex(_ID));
-        } else {
-            return -1;
-        }
+        return db.insert(NEWS_TABLE_NAME, null, contentValues);
     }
 
     public long insertBlackListTable(ContentValues contentValues) {
@@ -155,8 +129,7 @@ public class DatabaseManager extends SQLiteOpenHelper implements Closeable {
             sqlQuery += " ORDER BY " + sortOrder;
         }
 
-        Cursor cursor = db.rawQuery(sqlQuery, selectionArgs);
-        return cursor;
+        return db.rawQuery(sqlQuery, selectionArgs);
     }
 
 }
