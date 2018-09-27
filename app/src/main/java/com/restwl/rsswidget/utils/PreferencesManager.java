@@ -40,9 +40,11 @@ public class PreferencesManager {
         return preferences.getInt(NEWS_KEY + appWidgetId, 0);
     }
 
-    public static void resetNewsIndex(Context context, int appWidgetId) {
+    public static int resetNewsIndex(Context context, int appWidgetId) {
         SharedPreferences preferences = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
-        preferences.edit().putInt(NEWS_KEY + appWidgetId, 0).apply();
+        int index = 0;
+        preferences.edit().putInt(NEWS_KEY + appWidgetId, index).apply();
+        return index;
     }
 
     public static void resetNewsIndexForAllWidgets(Context context) {

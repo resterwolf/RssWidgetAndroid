@@ -25,4 +25,9 @@ public class IndexCalculator {
         }
     }
 
+    public static boolean indexIsCorrect(int index, int lastIndex) {
+        return index >= 0 && index <= lastIndex;
+    }
+
+
 }

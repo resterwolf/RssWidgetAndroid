@@ -88,8 +88,12 @@ public class RssWidgetProvider extends AppWidgetProvider {
 
         if (!newsList.isEmpty()) {
             setViewsVisible(remoteViews);
+            boolean indexIsCorrect = IndexCalculator.indexIsCorrect(index, newsList.size() - 1);
+            if (!indexIsCorrect)
+                index = PreferencesManager.resetNewsIndex(context, appWidgetId);
             News news = newsList.get(index);
-            String newsTitle = String.format(context.getString(R.string.placeholder_string_tab_number_text), index + 1, news.getTitle());
+            int newsNumber = ++index;
+            String newsTitle = String.format(context.getString(R.string.placeholder_string_tab_number_text), newsNumber, news.getTitle());
             remoteViews.setTextViewText(R.id.tv_news_title, newsTitle);
             remoteViews.setTextViewText(R.id.tv_news_description, news.getDescription());
             remoteViews.setTextViewText(R.id.tv_news_pub_date, HelperUtils.convertDateToRuLocal(news.getPubDate()));
@@ -98,6 +102,7 @@ public class RssWidgetProvider extends AppWidgetProvider {
             setViewsInvisible(remoteViews);
             remoteViews.setTextViewText(R.id.tv_news_title, context.getString(R.string.widget_news_list_empty));
             remoteViews.setOnClickPendingIntent(R.id.linearLayout_container, null);
+            PreferencesManager.resetNewsIndex(context, appWidgetId);
         }
 
         appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
