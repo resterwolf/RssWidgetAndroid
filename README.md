@@ -11,8 +11,8 @@ RSS читалка. Должен удовлетворять следующим �
 
 ## Widget screenshots
 <div align="center">
-<img src="./screens/Screenshot_1548170804.png"/>
-<img src="./screens/Screenshot_1548170892.png"/>
-<img src="./screens/Screenshot_1548170903.png"/>
-<img src="./screens/Screenshot_1548170925.png"/>
+<img width="320" height="568" src="./screens/Screenshot_1548170804.png"/>
+<img width="320" height="568" src="./screens/Screenshot_1548170892.png"/>
+<img width="320" height="568" src="./screens/Screenshot_1548170903.png"/>
+<img width="320" height="568" src="./screens/Screenshot_1548170925.png"/>
 </div>
